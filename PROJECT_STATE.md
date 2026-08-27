@@ -1,6 +1,6 @@
 # Project State
 
-**Updated:** 2026-08-27 — V0 R&D evidence complete, pending final repository verification and push.
+**Updated:** 2026-08-27 — V0 R&D evidence committed and pushed.
 
 ## Current truth
 
@@ -11,7 +11,8 @@
 - Seven benchmark cases produced 42 deterministic MP4 assets across two tracks and three routes. A repeated corpus has equal sequence SHA-256 values.
 - Two no-user-key model stills were generated as separate candidates. Model image-text and independent-keyframe consistency remain unverified.
 - A minimal plugin manifest validates the repository shape without defining a DeepTalk Core contract.
+- Initial V0 evidence commit: `2455b24818969e128798d3451db2b27a12c2d226`; check Git for current HEAD.
 
 ## Next operational action
 
-Run final validation, commit, push `main`, and update this state only with verified Git truth.
+Use the V0 evidence to decide whether Track B should become a deliberately designed original visual language. Do not promote Track A into project identity or build model-generated keyframe animation before a consistency study.
