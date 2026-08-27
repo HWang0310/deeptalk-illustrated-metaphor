@@ -1,0 +1,24 @@
+{
+  "name": "deeptalk-illustrated-metaphor",
+  "version": "0.1.0",
+  "description": "Standalone R&D for illustrated cognitive-metaphor motion assets.",
+  "author": {
+    "name": "HWang0310",
+    "email": "hwang0310@163.com",
+    "url": "https://github.com/HWang0310"
+  },
+  "homepage": "https://github.com/HWang0310/deeptalk-illustrated-metaphor",
+  "repository": "https://github.com/HWang0310/deeptalk-illustrated-metaphor",
+  "license": "MIT",
+  "keywords": ["illustrated-metaphor", "visual-r-and-d", "motion-assets"],
+  "interface": {
+    "displayName": "DeepTalk Illustrated Metaphor",
+    "shortDescription": "Research illustrated metaphors as short motion assets.",
+    "longDescription": "A standalone dual-track R&D plugin for benchmarked cognitive illustration and deterministic short-motion assembly.",
+    "developerName": "HWang0310",
+    "category": "Productivity",
+    "capabilities": ["Write"],
+    "defaultPrompt": "Create an illustrated-metaphor benchmark and render deterministic motion evidence.",
+    "brandColor": "#3766A8"
+  }
+}

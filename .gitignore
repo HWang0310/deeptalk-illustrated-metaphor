@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+output/
+vendor/upstream-audit/
+.DS_Store

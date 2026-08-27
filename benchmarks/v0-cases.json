@@ -1,0 +1,9 @@
+[
+  {"id":"burden-growth","tracks":["a_reference","b_neutral"],"semantic_intent":"压力在不知不觉中累积","metaphor":"一个人推越来越大的负担","scene_states":[{"name":"start"},{"name":"strain"},{"name":"overwhelm"}],"text":"负担越滚越大","duration_seconds":5,"qa_criteria":["single action","sparse annotation","clear scale change"]},
+  {"id":"tug-of-war","tracks":["a_reference","b_neutral"],"semantic_intent":"两种目标互相拉扯","metaphor":"两方拉扯同一根绳子","scene_states":[{"name":"balance"},{"name":"tension"}],"text":"左右拉扯","duration_seconds":4,"qa_criteria":["two forces","clear opposing direction"]},
+  {"id":"speed-loop","tracks":["a_reference","b_neutral"],"semantic_intent":"反馈循环加速","metaphor":"一个人被越来越快的环形跑道带动","scene_states":[{"name":"slow"},{"name":"fast"}],"text":"越转越快","duration_seconds":4,"qa_criteria":["visible loop","motion direction"]},
+  {"id":"hidden-fragility","tracks":["a_reference","b_neutral"],"semantic_intent":"表面稳定并不等于内部稳固","metaphor":"平稳桌面下有一条裂纹","scene_states":[{"name":"calm"},{"name":"crack"}],"text":"稳，只是表面","duration_seconds":4,"qa_criteria":["inside versus outside","sparse annotation"]},
+  {"id":"information-overload","tracks":["a_reference","b_neutral"],"semantic_intent":"信息量超过处理能力","metaphor":"信息卡片不断堆向一个小窗口","scene_states":[{"name":"clear"},{"name":"crowded"}],"text":"信息挤满窗口","duration_seconds":5,"qa_criteria":["density change","uncluttered focal point"]},
+  {"id":"network-effect","tracks":["a_reference","b_neutral"],"semantic_intent":"一个节点影响多个节点","metaphor":"一个中心节点拨动多个相连节点","scene_states":[{"name":"idle"},{"name":"propagate"}],"text":"一个点，带动一片","duration_seconds":4,"qa_criteria":["causal graph","single focal node"]},
+  {"id":"state-transition","tracks":["a_reference","b_neutral"],"semantic_intent":"从被动反应变成主动选择","metaphor":"角色从传送带上走向自己的踏板","scene_states":[{"name":"reactive"},{"name":"choice"},{"name":"active"}],"text":"从反应到选择","duration_seconds":5,"qa_criteria":["clear before after","state continuity"]}
+]
