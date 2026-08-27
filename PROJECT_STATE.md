@@ -1,6 +1,6 @@
 # Project State
 
-**Updated:** 2026-08-27 — V0.1 original visual-language evidence ready for final verification and push.
+**Updated:** 2026-08-27 — V0.1 original visual-language evidence committed and pushed.
 
 ## Current truth
 
@@ -15,7 +15,8 @@
 - ChatGPT Product Review marked V0 R&D PASS and froze Track A as reference. Track B is now primary R&D.
 - V0.1 compared B1 Paper Relay and B2 Object Theatre on the same seven benchmarks. B1 is the current research baseline, with a generic actor grammar rather than a mascot.
 - Final V0.1 corpus has 35 assets and matching sequence hashes on repeat. The small B1 model study shows recognizable but insufficiently exact two-state consistency.
+- V0.1 implementation commit: `91e3afab8b3fa250fafc32c64893e8e8f5ad4085`; check Git for current HEAD.
 
 ## Next operational action
 
-Run final validation, commit, and push V0.1. Next Product Review should decide whether to deepen B1 grammar; do not promote it to a formal brand identity or production model-keyframe pipeline.
+Next Product Review should decide whether to deepen B1 grammar; do not promote it to a formal brand identity or production model-keyframe pipeline.
