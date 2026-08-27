@@ -1,6 +1,6 @@
 # Project State
 
-**Updated:** 2026-08-27 — V0 R&D evidence committed and pushed.
+**Updated:** 2026-08-27 — V0.1 original visual-language evidence ready for final verification and push.
 
 ## Current truth
 
@@ -12,7 +12,10 @@
 - Two no-user-key model stills were generated as separate candidates. Model image-text and independent-keyframe consistency remain unverified.
 - A minimal plugin manifest validates the repository shape without defining a DeepTalk Core contract.
 - Initial V0 evidence commit: `2455b24818969e128798d3451db2b27a12c2d226`; check Git for current HEAD.
+- ChatGPT Product Review marked V0 R&D PASS and froze Track A as reference. Track B is now primary R&D.
+- V0.1 compared B1 Paper Relay and B2 Object Theatre on the same seven benchmarks. B1 is the current research baseline, with a generic actor grammar rather than a mascot.
+- Final V0.1 corpus has 35 assets and matching sequence hashes on repeat. The small B1 model study shows recognizable but insufficiently exact two-state consistency.
 
 ## Next operational action
 
-Use the V0 evidence to decide whether Track B should become a deliberately designed original visual language. Do not promote Track A into project identity or build model-generated keyframe animation before a consistency study.
+Run final validation, commit, and push V0.1. Next Product Review should decide whether to deepen B1 grammar; do not promote it to a formal brand identity or production model-keyframe pipeline.

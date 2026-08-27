@@ -7,3 +7,5 @@ The local V0 pipeline is:
 The natural input is a small cognitive-metaphor brief (intent, scene states, sparse copy, duration, and checks). The natural output is an asset package: MP4, a still/sequence, contact sheet, provenance and render metadata, and QA evidence. This is deliberately not a final DeepTalk plugin contract.
 
 The repository has a minimal validated Codex plugin manifest, but exposes no final Core integration surface. V0's real input fields are `semantic_intent`, `metaphor`, `scene_states`, `text`, `duration_seconds`, and `qa_criteria`; its output is local asset evidence plus a manifest rather than a published episode asset.
+
+V0.1 adds case-specific metaphor grammar between scene validation and SVG generation. For approved-still output it renders one approved SVG/PNG then applies local FFmpeg fade-in and bounded focal-push assembly. Structured-state output continues to render ordered explicit scene states. This keeps deterministic typography and motion distinct from optional model still research.

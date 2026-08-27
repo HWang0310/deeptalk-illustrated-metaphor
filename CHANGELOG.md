@@ -5,3 +5,4 @@
 - Initialized independent Illustrated Metaphor R&D repository.
 - Started dual-track Xiaohei-reference and neutral/original prototype study.
 - Audited upstream provenance, added deterministic dual-track renderer, QA, tests, and rendered V0 evidence.
+- Promoted Track B to primary R&D; added Paper Relay and Object Theatre visual-language hypotheses, case-specific metaphor grammar, refined approved-still motion, and a bounded model consistency study.

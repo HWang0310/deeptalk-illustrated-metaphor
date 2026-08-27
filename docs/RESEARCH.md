@@ -29,3 +29,37 @@ The local baseline uses Python standard library, macOS `sips`, and FFmpeg; it ne
 ## Current answer
 
 Evidence favors the transferable **Illustrated / Character Metaphor method** over dependence on a particular character identity. Deterministic motion adds enough practical value for 3–10 second talk-video inserts when it is limited to reveal/pan/cut/emphasis. True stop-motion is not yet shown to provide a large enough gain to outweigh model-frame consistency risk.
+
+## V0.1 — original visual-language study
+
+Track A is frozen as the provenance-labelled reference comparator. Track B is primary research. The V0.1 corpus used the unchanged seven-case benchmark and added two original, coherent systems:
+
+| Candidate | Character strategy | Visual grammar | Result |
+| --- | --- | --- | --- |
+| B1 Paper Relay | Anonymous generic actor; no name, face, personality, or fixed identity | Cobalt torso, coral action planes, charcoal grounding, pale-green state objects, warm-white editorial field | Strongest current research baseline. The actor makes force, responsibility, and state change readable without requiring a mascot. |
+| B2 Object Theatre | No recurring actor | Charcoal stage, indigo/coral/yellow geometric objects, high negative space | Useful secondary grammar for systems and relationships; less immediate for effort and agency. |
+
+Each of the seven benchmark cases now uses an explicitly different physical grammar: burden, tension, loop, fragility, overload, network, or transition. The first V0.1 renderer output was rejected as evidence because it reused one layout across all cases; the final corpus corrected this and has seven unique non-text layouts.
+
+### Fixed-character finding
+
+The generic B1 actor improves immediate agency and causal clarity relative to actor-free B2. That does **not** justify a fixed original character: a named or personality-bearing character would add subject-matter constraints, a larger identity burden, and multi-frame consistency cost. Current recommendation: retain a reusable *generic actor grammar*, not a mascot.
+
+### Deterministic motion finding
+
+Approved-still motion is now a real single-still FFmpeg assembly: 0.35-second fade-in, bounded 3.5% focal push, then hold. It is appropriate for unobtrusive talking-head B-roll. Object-specific emphasis is not claimed in this route; use a structured scene state when the state itself must change.
+
+### True stop-motion value
+
+B1 structured-state study covers all seven cases with 2–3 state frames. It visibly improves explanation for accumulation, loops, and thresholds, but its storytelling gain is modest for a 3–5 second insert. Recommendation: retain it as a selective enhancement for state-change concepts, not a default replacement for approved-still motion.
+
+### Small model consistency probe
+
+Two independently generated B1 burden states used a locked anonymous actor/object prompt and no image text. Material, palette, actor components, side placement, and burden semantics remained recognizable. Actor scale, exact limb geometry, margin, and object-to-actor proportion drifted. Result: suitable as research evidence only; not a production multi-state generation baseline.
+
+### V0.1 evidence
+
+- Final deterministic comparison: `output/v0.1/comparison/` — 35 assets: Track A approved-still reference (7), Track B V0 control (7), B1 approved-still plus structured-state (14), and B2 approved-still (7).
+- Deterministic repeat: `output/v0.1/repeat-final/` — all 35 sequence hashes match the final comparison corpus.
+- Model probe: `output/v0.1/model-consistency/b_paper_relay/start.png` and `overwhelm.png`.
+- The final 35-asset repeat rendered in 9.319 seconds on this machine. This is local, no-key deterministic cost only.

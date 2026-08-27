@@ -22,3 +22,13 @@ class MotionTests(unittest.TestCase):
                 self.assertEqual(["start", "strain", "overwhelm"], manifest["state_names"])
                 self.assertGreaterEqual(len(manifest["frame_plan"]), 2)
 
+    def test_approved_still_plan_has_readable_broll_beats(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            manifest = build_route("approved_still", CASE, Path(temporary_directory))
+
+        self.assertEqual(
+            ["reveal", "focal_push", "hold"],
+            [beat["motion"] for beat in manifest["motion_beats"]],
+        )
+        self.assertAlmostEqual(5, sum(beat["seconds"] for beat in manifest["motion_beats"]))
+        self.assertEqual("single_approved_still", manifest["source_mode"])

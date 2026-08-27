@@ -8,11 +8,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from illustrated_metaphor.cli import render_prototypes
+from illustrated_metaphor.cli import render_v01_comparison
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--output", type=Path, default=Path("output/v0"))
 parser.add_argument("--case-limit", type=int, default=None)
+parser.add_argument("--v01-comparison", action="store_true")
 arguments = parser.parse_args()
-result = render_prototypes(arguments.output, arguments.case_limit)
+result = render_v01_comparison(arguments.output) if arguments.v01_comparison else render_prototypes(arguments.output, arguments.case_limit)
 print(f"Rendered {len(result['assets'])} assets to {arguments.output}")

@@ -8,6 +8,8 @@ def run_qa(asset_manifest: dict) -> dict:
     failures = []
     if asset_manifest.get("track") == "a_reference" and not asset_manifest.get("provenance"):
         failures.append("Track A requires upstream-reference provenance")
+    if asset_manifest.get("track") in {"b_paper_relay", "b_object_theatre"} and asset_manifest.get("provenance") != "original-language-hypothesis":
+        failures.append("Track B candidate requires original-language provenance")
     duration = asset_manifest.get("duration_seconds")
     if not isinstance(duration, (int, float)) or not 3 <= duration <= 10:
         failures.append("duration is outside 3–10 seconds")
