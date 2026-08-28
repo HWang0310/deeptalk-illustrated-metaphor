@@ -15,3 +15,16 @@ class QATests(unittest.TestCase):
 
         self.assertFalse(report["passed"])
         self.assertIn("Track B candidate requires original-language provenance", report["failures"])
+
+    def test_v02_system_requires_structural_readability_metadata(self):
+        report = run_qa({
+            "track": "b1_metaphor_system",
+            "provenance": "original-metaphor-system",
+            "duration_seconds": 5,
+            "files": [],
+            "state_names": ["start", "end"],
+            "visual_qa": {"object_count": 2, "annotation_count": 1, "actor_object_separation": True, "clutter_candidate": False, "final_frame_readability": "candidate"},
+        })
+
+        self.assertFalse(report["passed"])
+        self.assertIn("V0.2 system requires a focal object", report["failures"])

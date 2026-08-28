@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from illustrated_metaphor.cli import render_prototypes, render_v01_comparison
+from illustrated_metaphor.cli import render_prototypes, render_v01_comparison, render_v02_comparison
 
 
 class CliTests(unittest.TestCase):
@@ -23,3 +23,16 @@ class CliTests(unittest.TestCase):
             {asset["track"] for asset in manifest["assets"]},
         )
         self.assertEqual(7, sum(asset["route"] == "structured_hybrid" for asset in manifest["assets"]))
+
+    def test_v02_comparison_renders_four_baselines_and_three_selective_state_studies(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            manifest = render_v02_comparison(Path(temporary_directory))
+
+        self.assertEqual(31, len(manifest["assets"]))
+        self.assertEqual(
+            {"a_reference", "b_paper_relay", "b1_metaphor_system", "b_object_theatre"},
+            {asset["track"] for asset in manifest["assets"]},
+        )
+        self.assertEqual(3, sum(asset["route"] == "structured_hybrid" for asset in manifest["assets"]))
+        system_assets = [asset for asset in manifest["assets"] if asset["track"] == "b1_metaphor_system"]
+        self.assertTrue(all(asset["qa"]["passed"] for asset in system_assets))
