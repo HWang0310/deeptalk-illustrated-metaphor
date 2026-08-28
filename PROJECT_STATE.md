@@ -1,6 +1,6 @@
 # Project State
 
-**Updated:** 2026-08-27 — V0.1 original visual-language evidence committed and pushed.
+**Updated:** 2026-08-28 — V0.2 original metaphor-system evidence committed locally; push status must be checked at handoff.
 
 ## Current truth
 
@@ -16,7 +16,11 @@
 - V0.1 compared B1 Paper Relay and B2 Object Theatre on the same seven benchmarks. B1 is the current research baseline, with a generic actor grammar rather than a mascot.
 - Final V0.1 corpus has 35 assets and matching sequence hashes on repeat. The small B1 model study shows recognizable but insufficiently exact two-state consistency.
 - V0.1 implementation commit: `91e3afab8b3fa250fafc32c64893e8e8f5ad4085`; check Git for current HEAD.
+- V0.2 promotes B1 from a rendering hypothesis to a bounded original metaphor system: seven immutable specs define actor/object roles, spatial relation, focal point, state change, annotation placement, and motion opportunity. The generic actor stays anonymous; network effect is deliberately object-only.
+- V0.2 uses a first composable original vocabulary—load, barrier, bridge, container, stack, rope, wheel, threshold, crack, network node, path, gate, resource block, and signal card—implemented as project-owned SVG primitives, not upstream assets.
+- The V0.2 comparison corpus has 31 assets: 28 approved-still comparator assets across Track A, B1 V0.1, B1 V0.2, and B2; plus three selective B1 V0.2 structured-state assets. Fresh QA is 31/31 pass and repeat sequence hashes are 31/31 equal.
+- B1 V0.2 is the current Track B research baseline. It is not a formal brand identity, mascot, or original character IP declaration. Track A remains frozen upstream reference; B2 remains a useful secondary actor-free comparator.
 
 ## Next operational action
 
-Next Product Review should decide whether to deepen B1 grammar; do not promote it to a formal brand identity or production model-keyframe pipeline.
+Next Product Review should decide whether to expand B1's benchmark scope or conduct a creator-usability study; do not promote it to a formal brand identity, mascot, or production model-keyframe pipeline.

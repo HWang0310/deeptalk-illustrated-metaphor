@@ -14,6 +14,7 @@ The reliable V0 baseline is **approved still → deterministic motion assembly**
 ```bash
 python3 -m unittest discover -s tests -v
 python3 scripts/render_prototypes.py --output output/v0
+python3 scripts/render_prototypes.py --v02-comparison --output output/v0.2/comparison
 ```
 
 Generated MP4s, PNG/SVG sequences, manifests, and contact sheets are intentionally local under `output/`.

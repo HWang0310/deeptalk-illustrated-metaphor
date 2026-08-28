@@ -63,3 +63,38 @@ Two independently generated B1 burden states used a locked anonymous actor/objec
 - Deterministic repeat: `output/v0.1/repeat-final/` — all 35 sequence hashes match the final comparison corpus.
 - Model probe: `output/v0.1/model-consistency/b_paper_relay/start.png` and `overwhelm.png`.
 - The final 35-asset repeat rendered in 9.319 seconds on this machine. This is local, no-key deterministic cost only.
+
+## V0.2 — Original Metaphor System
+
+V0.2 moves B1 beyond a shared paper style by treating each benchmark as a reusable cognitive scene grammar. The new `MetaphorSpec` record states the actor role (or object-only choice), original objects, spatial relation, focal object, declared state change, upper-left deterministic annotation, and a possible deterministic motion emphasis. The grammar is intentionally limited to seven benchmark patterns rather than claiming universal coverage.
+
+| Comparator | Evidence from the unchanged benchmark | Current finding |
+| --- | --- | --- |
+| Track A Xiaohei-inspired reference | Compact black actor and one-action framing remain legible, but upstream identity and provenance constraints remain material. | Frozen reference only; no new implementation investment. |
+| B1 Paper Relay V0.1 | Generic actor establishes immediate effort/agency, but its renderer begins from a small set of direct case overlays. | Useful historical baseline, not the preferred reusable system. |
+| B1 Original Metaphor System V0.2 | Seven case-specific actor/object/space/focal specifications; 10 B1 assets in the 31-asset corpus; deterministic Chinese and repeatable state logic. | Current Track B research baseline. |
+| B2 Object Theatre | Actor-free arrangement preserves negative space and works especially for systems/relationships. | Valuable secondary comparator; weaker for effort, resistance, and responsibility. |
+
+### Generic-actor finding
+
+The reusable anonymous actor improves causal clarity where a person bears, pulls, receives, runs, observes, or chooses. It is intentionally omitted for network propagation. This supports a *generic actor grammar*, not a fixed original character: there is still no face, name, personality, ownership claim, or mascot decision. A fixed character has not shown enough added recognition benefit to offset subject-matter restriction and multi-state consistency cost.
+
+### Deterministic and structured motion
+
+The production baseline remains final approved still → local deterministic assembly: 0.35-second fade-in, bounded 3.5% whole-frame focal push, and hold. V0.2 records a focal target but does not overstate it as component animation. The final readable state is used as the approved still so a single frame carries the central claim.
+
+Structured states make the scale escalation of burden, information accumulation, and threshold crossing easier to follow. They still add only a modest storytelling benefit in a 4–5 second talking-head insert, so the route remains selective rather than default. Independent keyframes remain a high-risk control without new investment.
+
+### Model consistency decision
+
+No new model-generated multi-state probe was run. The V0.1 two-state locked B1 probe already found recognisable material/palette/semantic continuity but layout, limb geometry, margins, and object proportions drifted. V0.2's evidence gain comes from deterministic grammar, not by extending an unproven model production path. Model-generated Chinese remains unverified and intentionally out of scope.
+
+### V0.2 rendered evidence and repeatability
+
+- `output/v0.2/comparison/`: 31 MP4 assets with PNG/SVG source sequences, contact sheets, manifests, and QA reports.
+- `output/v0.2/repeat/`: same 31 assets; all frame-sequence SHA-256 values match the comparison corpus.
+- Fresh local no-key render time: 8.708 seconds for comparison; 8.459 seconds for repeat on this machine. This measures the SVG → sips → FFmpeg pipeline only; it excludes service-managed image-model latency/cost.
+
+### Current recommendation
+
+Keep B1 Original Metaphor System as the current **Track B research baseline**, without promoting it to a formal DeepTalk identity. Continue approved-still deterministic motion as the primary usable form. Use B1 structured states only for inherently temporal semantic changes. Keep Track A and B2 in comparison evidence. The next Product Review should decide whether to test a modest expanded case set or evaluate creator-facing usability; it should not yet approve a mascot, a final brand language, or a model-keyframe production pipeline.
