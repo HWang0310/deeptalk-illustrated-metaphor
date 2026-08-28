@@ -22,6 +22,14 @@ class VocabularyTests(unittest.TestCase):
         self.assertIsNone(network.actor_role)
         self.assertIn("network-node", network.objects)
 
+    def test_specs_use_the_complete_first_original_object_vocabulary(self):
+        used_objects = set().union(*(set(get_metaphor_spec(case_id).objects) for case_id in CASE_IDS))
+
+        self.assertTrue({
+            "load", "barrier", "bridge", "container", "stack", "rope", "wheel", "threshold",
+            "crack", "network-node", "path", "gate", "resource-block", "signal-card",
+        }.issubset(used_objects))
+
     def test_renderer_marks_focal_objects_and_actor_object_separation(self):
         burden_svg = render_b1_system("burden-growth", 1)
         network_svg = render_b1_system("network-effect", 1)
@@ -32,4 +40,3 @@ class VocabularyTests(unittest.TestCase):
         self.assertIn('data-role="object"', burden_svg)
         self.assertNotIn('data-role="actor"', network_svg)
         self.assertIn('data-focal-object="origin-node"', network_svg)
-

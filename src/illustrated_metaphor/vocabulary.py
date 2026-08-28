@@ -36,7 +36,7 @@ SPECS = {
     "hidden-fragility": MetaphorSpec("hidden-fragility", "fragility", "observer", ("bridge", "crack"), "a calm bridge spans a newly visible crack", "crack", "concealed crack opens below bridge", "upper-left", "crack reveal"),
     "information-overload": MetaphorSpec("information-overload", "overload", "receiver", ("signal-card", "container", "stack"), "signal cards overflow a bounded container", "container-mouth", "cards accumulate past container capacity", "upper-left", "staged card reveal"),
     "network-effect": MetaphorSpec("network-effect", "network", None, ("network-node", "path", "signal-card"), "one origin node activates linked nodes", "origin-node", "linked nodes receive activation", "upper-left", "propagation cut"),
-    "state-transition": MetaphorSpec("state-transition", "transition", "chooser", ("gate", "threshold", "path"), "actor crosses a threshold through an open gate", "gate", "path changes from reactive to active", "upper-left", "gate and path reveal"),
+    "state-transition": MetaphorSpec("state-transition", "transition", "chooser", ("gate", "threshold", "path", "barrier"), "actor crosses a reduced barrier and threshold through an open gate", "gate", "path changes from reactive to active", "upper-left", "gate and path reveal"),
 }
 
 
@@ -93,7 +93,8 @@ def _network(state: int) -> str:
 
 def _transition(state: int) -> str:
     x = 360 + state * 115
-    return _actor(x, 420, state * 4) + _object("gate", '<path d="M750 520 V320 H900 V520" fill="none" stroke="#27313d" stroke-width="13"/><path d="M825 320 V520" stroke="#c4d85a" stroke-width="20"/>', True) + _object("threshold", '<path d="M650 535 H970" stroke="#ef7350" stroke-width="15" stroke-linecap="round"/>') + _object("path", f'<path d="M250 575 C490 530 {590 + state * 25} 540 750 535" fill="none" stroke="#315f9f" stroke-width="16" stroke-linecap="round"/>')
+    barrier_height = 115 - state * 38
+    return _actor(x, 420, state * 4) + _object("gate", '<path d="M750 520 V320 H900 V520" fill="none" stroke="#27313d" stroke-width="13"/><path d="M825 320 V520" stroke="#c4d85a" stroke-width="20"/>', True) + _object("threshold", '<path d="M650 535 H970" stroke="#ef7350" stroke-width="15" stroke-linecap="round"/>') + _object("path", f'<path d="M250 575 C490 530 {590 + state * 25} 540 750 535" fill="none" stroke="#315f9f" stroke-width="16" stroke-linecap="round"/>') + _object("barrier", f'<rect x="655" y="{520 - barrier_height}" width="25" height="{barrier_height}" rx="10" fill="#ef7350" stroke="#27313d" stroke-width="6"/>')
 
 
 RENDERERS = {
