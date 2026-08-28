@@ -32,3 +32,5 @@ class MotionTests(unittest.TestCase):
         )
         self.assertAlmostEqual(5, sum(beat["seconds"] for beat in manifest["motion_beats"]))
         self.assertEqual("single_approved_still", manifest["source_mode"])
+        self.assertEqual("load", manifest["focal_object"])
+        self.assertEqual("focal push is a whole-frame camera move; no component animation claimed", manifest["focal_treatment"])

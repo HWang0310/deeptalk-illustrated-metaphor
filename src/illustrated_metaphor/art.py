@@ -2,6 +2,8 @@
 
 from html import escape
 
+from .vocabulary import render_b1_system
+
 
 def _metaphor_overlay(case_id: str, state_index: int) -> str:
     """Return a compact, case-specific physical metaphor grammar."""
@@ -40,7 +42,10 @@ def render_svg(case: dict, track: str, state_index: int) -> str:
     elif track == "b_object_theatre":
         body = f'''<g class="object-theatre"><path d="M280 500 L280 390 L510 390 L510 500" fill="none" stroke="#27313d" stroke-width="12"/><rect x="{350 + state_index * 10}" y="{330 - state_index * 12}" width="{130 + state_index * 45}" height="{110 + state_index * 38}" rx="22" fill="#ef7350"/><path d="M580 495 C650 400 {710 - state_index * 20} 390 {805 - state_index * 10} 495" fill="#f3c64e" stroke="#27313d" stroke-width="9"/><circle cx="750" cy="400" r="{38 * scale:.0f}" fill="#385f9f"/><path d="M260 535 H920" stroke="#27313d" stroke-width="12" stroke-linecap="round"/></g>'''
         provenance = 'data-provenance="original-language-hypothesis"'
+    elif track == "b1_metaphor_system":
+        body = render_b1_system(str(case.get("id", "")), state_index)
+        provenance = 'data-provenance="original-metaphor-system"'
     else:
         raise ValueError(f"unknown track: {track}")
-    overlay = _metaphor_overlay(str(case.get("id", "")), state_index)
+    overlay = "" if track == "b1_metaphor_system" else _metaphor_overlay(str(case.get("id", "")), state_index)
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-track="{track}" {provenance}><rect width="1280" height="720" fill="#fbf8f2"/><rect x="70" y="80" width="1140" height="560" rx="30" fill="#fffdf8" stroke="#2d2c36" stroke-width="7"/>{body}{overlay}<text x="100" y="150" font-family="PingFang SC, PingFang, sans-serif" font-size="42" font-weight="600" fill="#2d2c36">{text}</text><text x="100" y="595" font-family="PingFang SC, PingFang, sans-serif" font-size="20" fill="#706c65">{escape(case.get('id', 'scene'))} · state {state_index + 1}</text></svg>'''

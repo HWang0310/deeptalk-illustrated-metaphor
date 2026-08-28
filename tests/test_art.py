@@ -53,3 +53,13 @@ class ArtTests(unittest.TestCase):
 
         self.assertNotIn('M645 510 L760 285 L850 510', svg)
         self.assertIn('data-metaphor="loop"', svg)
+
+    def test_v02_system_track_emits_inspectable_original_object_grammar(self):
+        svg = render_svg({**CASE, "id": "information-overload"}, "b1_metaphor_system", 1)
+
+        self.assertIn('data-track="b1_metaphor_system"', svg)
+        self.assertIn('data-provenance="original-metaphor-system"', svg)
+        self.assertIn('class="b1-metaphor-system"', svg)
+        self.assertIn('data-focal-object="container-mouth"', svg)
+        self.assertIn('data-role="actor"', svg)
+        self.assertIn('data-role="object"', svg)
