@@ -11,6 +11,8 @@ REQUIRED_FIELDS = {
     "chinese_readability", "clutter", "creator_usefulness", "generic_actor", "object_only", "metaphor_overreach",
 }
 
+REVIEW_FIELDS = REQUIRED_FIELDS - {"spoken_semantics", "visual_purpose", "candidate_text"}
+
 
 def load_common_briefs(path: str = "benchmarks/common-briefs.json") -> list[dict]:
     """Load the fixed eight-item comparison experiment without altering its semantics."""

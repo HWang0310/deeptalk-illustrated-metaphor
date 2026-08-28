@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from illustrated_metaphor.cli import render_prototypes, render_v01_comparison, render_v02_comparison
+from illustrated_metaphor.cli import render_common_brief_trial, render_prototypes, render_v01_comparison, render_v02_comparison
 
 
 class CliTests(unittest.TestCase):
@@ -50,3 +50,18 @@ class CliTests(unittest.TestCase):
 
         self.assertIn("hidden-fragility · state 2", svg)
         self.assertIn('stroke="#ef7350"', svg)
+
+    def test_common_brief_trial_renders_seven_b1_candidates_and_records_the_abstention(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            manifest = render_common_brief_trial(Path(temporary_directory))
+            cb03 = next(asset for asset in manifest["assets"] if asset["case_id"] == "CB03")
+            source_svg = Path(cb03["files"][-1]).with_suffix(".svg").read_text(encoding="utf-8")
+
+        self.assertEqual("common-brief-trial", manifest["study"])
+        self.assertEqual(7, len(manifest["assets"]))
+        self.assertEqual(["CB08"], [item["id"] for item in manifest["abstentions"]])
+        self.assertEqual({"b1_metaphor_system"}, {asset["track"] for asset in manifest["assets"]})
+        self.assertEqual("burden-growth", cb03["visual_case_id"])
+        self.assertEqual("CB03", cb03["case_id"])
+        self.assertIn("CB03 · state 3", source_svg)
+        self.assertTrue(all(asset["qa"]["passed"] for asset in manifest["assets"]))

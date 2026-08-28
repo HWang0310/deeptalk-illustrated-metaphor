@@ -10,11 +10,11 @@ def _run(command: list[str]) -> None:
     subprocess.run(command, check=True, capture_output=True, text=True)
 
 
-def render_frame(track: str, label: str, state_index: int, png_path: Path, case_id: str = "prototype") -> None:
+def render_frame(track: str, label: str, state_index: int, png_path: Path, case_id: str = "prototype", display_case_id: str | None = None) -> None:
     """Render one 16:9 research frame with separate track visual language."""
     png_path.parent.mkdir(parents=True, exist_ok=True)
     svg_path = png_path.with_suffix(".svg")
-    svg_path.write_text(render_svg({"id": case_id, "text": label}, track, state_index), encoding="utf-8")
+    svg_path.write_text(render_svg({"id": case_id, "display_id": display_case_id or case_id, "text": label}, track, state_index), encoding="utf-8")
     _run(["sips", "-s", "format", "png", str(svg_path), "--out", str(png_path)])
 
 

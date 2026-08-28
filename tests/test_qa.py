@@ -28,3 +28,17 @@ class QATests(unittest.TestCase):
 
         self.assertFalse(report["passed"])
         self.assertIn("V0.2 system requires a focal object", report["failures"])
+
+    def test_common_brief_candidate_requires_full_trial_review_metadata(self):
+        report = run_qa({
+            "study": "common-brief-trial",
+            "track": "b1_metaphor_system",
+            "provenance": "original-metaphor-system",
+            "duration_seconds": 5,
+            "files": [],
+            "state_names": ["start", "end"],
+            "visual_qa": {"focal_object": "load", "object_count": 2, "annotation_count": 1, "uses_actor": True, "actor_object_separation": True, "clutter_candidate": False, "final_frame_readability": "candidate"},
+        })
+
+        self.assertFalse(report["passed"])
+        self.assertIn("Common Brief trial requires a complete review rubric", report["failures"])

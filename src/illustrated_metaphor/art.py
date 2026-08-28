@@ -29,6 +29,7 @@ def _metaphor_overlay(case_id: str, state_index: int) -> str:
 def render_svg(case: dict, track: str, state_index: int) -> str:
     """Render an intentionally simple 16:9 cognitive-metaphor still as SVG."""
     text = escape(str(case.get("text", "")))
+    display_id = escape(str(case.get("display_id", case.get("id", "scene"))))
     scale = 1 + state_index * 0.35
     if track == "a_reference":
         body = f'''<g class="black-figure"><circle cx="365" cy="295" r="34" fill="#171717"/><path d="M365 329 L365 440 M365 360 L310 405 M365 360 L425 385 M365 440 L325 505 M365 440 L410 505" stroke="#171717" stroke-width="26" stroke-linecap="round"/></g><circle cx="{690 + state_index * 45}" cy="430" r="{100 * scale:.0f}" fill="#f2c94c"/><path d="M430 450 L{610 + state_index * 35} 450" stroke="#171717" stroke-width="10" stroke-linecap="round"/>'''
@@ -48,4 +49,4 @@ def render_svg(case: dict, track: str, state_index: int) -> str:
     else:
         raise ValueError(f"unknown track: {track}")
     overlay = "" if track == "b1_metaphor_system" else _metaphor_overlay(str(case.get("id", "")), state_index)
-    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-track="{track}" {provenance}><rect width="1280" height="720" fill="#fbf8f2"/><rect x="70" y="80" width="1140" height="560" rx="30" fill="#fffdf8" stroke="#2d2c36" stroke-width="7"/>{body}{overlay}<text x="100" y="150" font-family="PingFang SC, PingFang, sans-serif" font-size="42" font-weight="600" fill="#2d2c36">{text}</text><text x="100" y="595" font-family="PingFang SC, PingFang, sans-serif" font-size="20" fill="#706c65">{escape(case.get('id', 'scene'))} · state {state_index + 1}</text></svg>'''
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-track="{track}" {provenance}><rect width="1280" height="720" fill="#fbf8f2"/><rect x="70" y="80" width="1140" height="560" rx="30" fill="#fffdf8" stroke="#2d2c36" stroke-width="7"/>{body}{overlay}<text x="100" y="150" font-family="PingFang SC, PingFang, sans-serif" font-size="42" font-weight="600" fill="#2d2c36">{text}</text><text x="100" y="595" font-family="PingFang SC, PingFang, sans-serif" font-size="20" fill="#706c65">{display_id} · state {state_index + 1}</text></svg>'''

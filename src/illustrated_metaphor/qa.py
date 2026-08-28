@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from .common_briefs import REVIEW_FIELDS
+
 
 def run_qa(asset_manifest: dict) -> dict:
     """Check the claims V0 can establish without an image-generation model."""
@@ -26,6 +28,14 @@ def run_qa(asset_manifest: dict) -> dict:
             failures.append("V0.2 composition is flagged as a clutter candidate")
         if visual.get("final_frame_readability") != "candidate":
             failures.append("V0.2 final frame lacks a structural readability candidate")
+    if asset_manifest.get("study") == "common-brief-trial":
+        review = asset_manifest.get("trial_review")
+        if not isinstance(review, dict) or not REVIEW_FIELDS.issubset(review):
+            failures.append("Common Brief trial requires a complete review rubric")
+        elif review.get("suitability") not in {"SUITABLE", "BORDERLINE"}:
+            failures.append("Common Brief candidate suitability must be SUITABLE or BORDERLINE")
+        elif review.get("track") != "b1_metaphor_system":
+            failures.append("Common Brief candidate must remain on the B1 primary track")
     duration = asset_manifest.get("duration_seconds")
     if not isinstance(duration, (int, float)) or not 3 <= duration <= 10:
         failures.append("duration is outside 3–10 seconds")
@@ -34,4 +44,4 @@ def run_qa(asset_manifest: dict) -> dict:
         failures.append("one or more declared asset files are missing")
     if not asset_manifest.get("state_names"):
         failures.append("state continuity cannot be checked without ordered states")
-    return {"passed": not failures, "failures": failures, "checks": ["provenance", "duration", "files", "state continuity", "focal clarity", "object count", "annotation density", "actor/object separation", "clutter candidate", "final-frame readability"]}
+    return {"passed": not failures, "failures": failures, "checks": ["provenance", "duration", "files", "state continuity", "focal clarity", "object count", "annotation density", "actor/object separation", "clutter candidate", "final-frame readability", "common brief rubric"]}
