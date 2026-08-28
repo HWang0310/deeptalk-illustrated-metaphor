@@ -36,3 +36,17 @@ class CliTests(unittest.TestCase):
         self.assertEqual(3, sum(asset["route"] == "structured_hybrid" for asset in manifest["assets"]))
         system_assets = [asset for asset in manifest["assets"] if asset["track"] == "b1_metaphor_system"]
         self.assertTrue(all(asset["qa"]["passed"] for asset in system_assets))
+
+    def test_v02_approved_still_uses_final_readable_scene_state(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            manifest = render_v02_comparison(Path(temporary_directory))
+            fragility = next(
+                asset for asset in manifest["assets"]
+                if asset["case_id"] == "hidden-fragility"
+                and asset["track"] == "b1_metaphor_system"
+                and asset["route"] == "approved_still"
+            )
+            svg = Path(fragility["files"][2]).with_suffix(".svg").read_text(encoding="utf-8")
+
+        self.assertIn("hidden-fragility · state 2", svg)
+        self.assertIn('stroke="#ef7350"', svg)

@@ -20,9 +20,9 @@ TRACK_PROVENANCE = {
 }
 
 
-def _render_asset(output: Path, case: dict, track: str, route: str) -> dict:
+def _render_asset(output: Path, case: dict, track: str, route: str, approved_state_index: int = 0) -> dict:
     plan = build_route(route, case, output)
-    state_indexes = [0] if route == "approved_still" else list(range(len(case["scene_states"])))
+    state_indexes = [approved_state_index] if route == "approved_still" else list(range(len(case["scene_states"])))
     frame_dir = output / case["id"] / track / route / "sequence"
     for number, state_index in enumerate(state_indexes, 1):
         render_frame(track, case["text"], state_index, frame_dir / f"frame_{number:03d}.png", case_id=case["id"])
@@ -89,7 +89,7 @@ def render_v02_comparison(output: Path) -> dict:
     assets = []
     for case in load_cases("benchmarks/v0-cases.json"):
         for track in ("a_reference", "b_paper_relay", "b1_metaphor_system", "b_object_theatre"):
-            assets.append(_render_asset(output, case, track, "approved_still"))
+            assets.append(_render_asset(output, case, track, "approved_still", approved_state_index=len(case["scene_states"]) - 1))
         if case["id"] in selective_state_cases:
             assets.append(_render_asset(output, case, "b1_metaphor_system", "structured_hybrid"))
     result = {"renderer": "ffmpeg local no-key deterministic", "study": "v0.2-original-metaphor-system", "assets": assets}
