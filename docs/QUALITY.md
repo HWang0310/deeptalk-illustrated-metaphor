@@ -19,3 +19,9 @@ V0.2 adds B1-system manifest checks for original-system provenance, a named foca
 The current V0.2 corpus has 31/31 passing QA reports. A fresh repeat corpus has matching frame-sequence SHA-256 values for all 31 assets. Two sampled MP4s—state-transition approved-still and information-overload structured-state—both measured 5.000000 seconds. Chinese remained deterministic SVG/PingFang text and was visually inspected as correct in the PNG contact sheets.
 
 Autonomous visual review found the B1 V0.2 final state legible for all seven target claims after correcting the approved-still source to use the final readable scene state; the hidden-fragility crack is now visible rather than latent. The generic actor helps burden, tension, loop, overload, and transition; object-only network avoids inventing agency where the claim is propagation. B2 remains useful for actor-free systems but is not a competing primary direction, so no creator A/B choice was warranted.
+
+## Common Brief Trial QA
+
+Every actual Common Brief candidate records a complete review rubric in its manifest: suitability, semantic/metaphor clarity, time-to-understand, family naturalness, emotional/agency use, motion, Chinese, clutter, creator usefulness, actor/object decision, route, rationale, and overreach. QA rejects a Common Brief candidate without that complete record or one that leaves the B1 primary track.
+
+The fixed brief assessment explicitly permits ABSTAIN. CB08 therefore has no media or asset QA report by design; its reason and complete rubric live in the root trial manifest. The seven actual candidates continue to use deterministic SVG/PingFang Chinese, local sips rasterization, and FFmpeg assembly. Contact-sheet visual review found no Chinese rendering corruption; it also triggered the evidence-based downgrade of CB07 from SUITABLE to BORDERLINE.

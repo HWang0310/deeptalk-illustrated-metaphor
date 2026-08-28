@@ -11,3 +11,7 @@ V0.1 keeps these exact seven cases. Its final comparable corpus contains 35 asse
 V0.2 keeps the exact same seven semantic cases. Its 31-asset corpus contains four approved-still comparators for every case—Track A frozen reference, B1 V0.1 Paper Relay, B1 V0.2 Original Metaphor System, and B2 Object Theatre—plus V0.2 B1 structured-state evidence only for burden growth, information overload, and state transition.
 
 The V0.2 B1 mappings are burden/load, tension/rope, loop/wheel, fragility/bridge-and-crack, overload/container-and-signals, network/origin-node, and transition/gate-threshold-barrier. They use the first composable original vocabulary: load, barrier, bridge, container, stack, rope, wheel, threshold, crack, network node, path, gate, resource block, and signal card. These are original SVG primitives; no Xiaohei asset or upstream source is imported.
+
+## Common Brief Trial
+
+The Common Brief Trial uses [`benchmarks/common-briefs.json`](../benchmarks/common-briefs.json), a separate fixed set of CB01–CB08 supplied by Product Review. It does not replace the V0 seven-case benchmark. The trial records suitability and permits `SUITABLE`, `BORDERLINE`, and `ABSTAIN`; CB08 numeric evidence is intentionally an abstention. No other plugin trial result was read to influence the assessment.

@@ -1,6 +1,6 @@
 # Project State
 
-**Updated:** 2026-08-28 — V0.2 original metaphor-system evidence committed locally; push status must be checked at handoff.
+**Updated:** 2026-08-28 — V0.2 baseline accepted; Common Brief Trial evidence committed locally, with push status checked at handoff.
 
 ## Current truth
 
@@ -20,7 +20,9 @@
 - V0.2 uses a first composable original vocabulary—load, barrier, bridge, container, stack, rope, wheel, threshold, crack, network node, path, gate, resource block, and signal card—implemented as project-owned SVG primitives, not upstream assets.
 - The V0.2 comparison corpus has 31 assets: 28 approved-still comparator assets across Track A, B1 V0.1, B1 V0.2, and B2; plus three selective B1 V0.2 structured-state assets. Fresh QA is 31/31 pass and repeat sequence hashes are 31/31 equal.
 - B1 V0.2 is the current Track B research baseline. It is not a formal brand identity, mascot, or original character IP declaration. Track A remains frozen upstream reference; B2 remains a useful secondary actor-free comparator.
+- Common Brief Trial is complete as a comparison experiment, not V0.3: CB01/CB02/CB07 are BORDERLINE, CB03–CB06 are SUITABLE, and CB08 Numeric Evidence is an explicit ABSTAIN. Seven B1 assets are generated under `output/common-brief-trial/`; B2 and Track A generate no Common Brief asset.
+- The trial confirms family strengths in physical metaphor, agency, tension, feedback, and state change. It confirms limits in exact numbers, dense causal chains, and conditional logical judgments. No MG or Hand-drawn trial repository or output was inspected.
 
 ## Next operational action
 
-Next Product Review should decide whether to expand B1's benchmark scope or conduct a creator-usability study; do not promote it to a formal brand identity, mascot, or production model-keyframe pipeline.
+Do not enter a next stage from this trial. Any future Product Review may use the evidence to decide whether a separate creator-usability study is warranted; do not promote B1 to a formal brand identity, mascot, or production model-keyframe pipeline.

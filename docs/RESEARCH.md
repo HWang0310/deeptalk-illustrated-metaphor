@@ -98,3 +98,11 @@ No new model-generated multi-state probe was run. The V0.1 two-state locked B1 p
 ### Current recommendation
 
 Keep B1 Original Metaphor System as the current **Track B research baseline**, without promoting it to a formal DeepTalk identity. Continue approved-still deterministic motion as the primary usable form. Use B1 structured states only for inherently temporal semantic changes. Keep Track A and B2 in comparison evidence. The next Product Review should decide whether to test a modest expanded case set or evaluate creator-facing usability; it should not yet approve a mascot, a final brand language, or a model-keyframe production pipeline.
+
+## Cross-Plugin Common Brief Trial — Illustrated Metaphor track
+
+This is a fixed-eight-brief comparison experiment, not V0.3. The Illustrated Metaphor track did not inspect MG or Hand-drawn trial repositories or output, did not generate a Track A asset, and did not expand the visual language or model pipeline.
+
+The outcome is four SUITABLE candidates (accumulation pressure, feedback loop, two-side tension, surface vs mechanism), three BORDERLINE candidates (core judgment, causal transmission, rule change), and one deliberate ABSTAIN (numeric evidence). Seven B1 assets were rendered; B2 was not used because it was not distinctly more natural for any specific brief. The full per-brief rubric and visual review are in [`docs/COMMON_BRIEF_TRIAL.md`](COMMON_BRIEF_TRIAL.md).
+
+The key capability boundary is now evidenced rather than assumed: this family is strong at physical metaphor, agency, emotional/causal tension, state change, and abstract relationship. It becomes less reliable when exact numbers, dense labelled chains, or narrow conditional logic must remain visually primary. In those cases, an abstention or deterministic data/editorial treatment is preferable to metaphor overreach.
