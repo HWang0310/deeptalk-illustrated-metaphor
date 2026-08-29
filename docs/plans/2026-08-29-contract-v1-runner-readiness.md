@@ -1,13 +1,15 @@
 # Visual Asset Plugin Contract V1 — Runner Readiness Plan
 
 > **Status:** Research-only readiness audit. No production runner is implemented here. No production source is changed. No Core or other plugin is modified. No main, tag, or release is touched.
+>
+> **Core reference:** `HWang0310/deep-talk-studio` branch `agent/multi-asset-studio` @ `d1c990c25e44aa55ffc2789f7b00ee2374a198be` — this is the canonical Multi-Asset branch, not Core `main`.
 
 ## Repository and baseline
 
 - **Repository:** `HWang0310/deeptalk-illustrated-metaphor`
 - **Baseline main SHA:** `cf1cdfe6855aa8d2902b4506184c6d6fd0c60d74`
 - **Research branch:** `agent/contract-v1-runner-readiness`
-- **Core contract repo (read-only):** `HWang0310/deep-talk-studio` @ `d1c990c25e44aa55ffc2789f7b00ee2374a198be`
+- **Core contract repo (read-only):** `HWang0310/deep-talk-studio` @ branch `agent/multi-asset-studio`, SHA `d1c990c25e44aa55ffc2789f7b00ee2374a198be`. This is the canonical Multi-Asset branch — **not** Core `main`.
 
 ## Purpose
 
@@ -125,11 +127,13 @@ The route selection should follow the Common Brief Trial pattern:
 - `approved_still` for tension, surface-vs-mechanism, and single-state concepts.
 - `structured_hybrid` for accumulation, loops, and state transitions where the state change itself is the central claim.
 
-The canvas size from the Opportunity (1920×1080) differs from the current renderer's 1280×720. The runner should either:
-- Scale the SVG viewBox to the requested canvas, or
-- Render at 1280×720 and note the canvas mismatch in `plugin_metadata`.
+The canvas size from the Opportunity (1920×1080) differs from the current renderer's 1280×720. This is an open capability boundary question, not a settled architecture:
 
-The simplest deterministic approach: keep the SVG viewBox at 1280×720 and let FFmpeg scale to the requested canvas. This preserves all existing determinism.
+- **Quality-first principle:** The runner must not silently upscale a low-resolution render and present it as native 1920×1080. Any canvas mismatch must be transparent.
+- **Preferred path (to investigate during implementation):** Determine if the SVG/vector pipeline can directly rasterize at the requested 16:9 canvas (1920×1080). If the SVG viewBox and `sips`/FFmpeg pipeline can accept a target canvas parameter without modifying production source, this produces the highest quality.
+- **Fallback hypothesis (to verify):** Render at 1280×720 and scale via FFmpeg `-vf scale=1920:1080`. This is a testable approach but may introduce quality degradation (upscaling artifacts, soft edges). This must be validated with visual inspection before being accepted.
+- **Capability boundary declaration:** If the renderer truly only supports a fixed canvas (1280×720), the runner should declare this as a capability boundary. An unsupported canvas size may warrant a `BORDERLINE` or `ABSTAIN` suitability decision, or a `BLOCKED` generation result — rather than silently degrading quality.
+- **First synthetic integration test:** May use the currently verified canvas route (1280×720) while the 1920×1080 question is investigated. The integration test's Opportunity should clearly document which canvas is used and why.
 
 ### Q4: Avoiding committed Common Brief fixture lookup
 
@@ -174,7 +178,8 @@ Duration: the existing renderer derives duration from `case["duration_seconds"]`
 | `src/illustrated_metaphor/contract.py` | **NEW** | Contract V1 logic: suitability assessment function, opportunity→case mapping, generation result builder, artifact packaging. Pure functions, no I/O. |
 | `src/illustrated_metaphor/__init__.py` | **MODIFY** | Add `__version__` constant for `--version` output. |
 | `tests/test_contract.py` | **NEW** | Unit tests for suitability mapping, case selection, generation result shape, artifact completeness, determinism. |
-| `.codex-plugin/plugin.json` | **MODIFY** | Bump version to `"0.2.0"` or add `"contract_version": "visual-asset-plugin-contract/1"` field. |
+
+> **`.codex-plugin/plugin.json` is NOT modified by default.** The Contract V1 runner version is an independent concept from the Codex plugin manifest version. The runner version is established via a module-level `__version__` constant in `__init__.py` (or `contract.py`) and exposed via `--version`. The `.codex-plugin/plugin.json` should only be modified if the existing repo contract explicitly requires it for Contract V1 integration — which has not been established.
 
 No existing source files (`cli.py`, `render.py`, `art.py`, `vocabulary.py`, `motion.py`, `qa.py`, `benchmark.py`, `scene.py`, `common_briefs.py`) need to be modified. The runner imports and reuses them as-is.
 
@@ -202,11 +207,13 @@ For the Contract V1 runner, the `--output-dir` is Core-owned and passed by the a
 | Existing module | Contract V1 reuse |
 |---|---|
 | `qa.py` → `run_qa(asset_manifest)` | Translates to candidate `qa.status: PASSED` when `run_qa().passed == True`, `FAILED` otherwise. The existing QA checks (provenance, duration 3–10s, files exist, state continuity, V0.2 structural readability) are directly applicable. |
-| Per-asset `manifest.json` | Maps to `MANIFEST` artifact role. Already JSON, already contains provenance, track, route, files, sequence SHA-256, and QA report. |
-| `contact-sheet.png` | Maps to `PREVIEW` artifact role. |
-| `asset.mp4` | Maps to `PRIMARY_MEDIA` artifact role. Needs `media_type: "video/mp4"` and `sha256`. |
-| Per-asset manifest's `qa` field | Maps to `QA_REPORT` artifact role (the manifest already contains the QA dict). |
+| Per-asset `manifest.json` | Maps to `MANIFEST` artifact role. Already JSON, already contains provenance, track, route, files, sequence SHA-256, and QA report. **Must exist as a physical file in `--output-dir`.** |
+| `contact-sheet.png` | Maps to `PREVIEW` artifact role. **Must exist as a physical file in `--output-dir`.** |
+| `asset.mp4` | Maps to `PRIMARY_MEDIA` artifact role. Needs `media_type: "video/mp4"` and `sha256`. **Must exist as a physical file in `--output-dir`.** |
+| Per-asset manifest's `qa` field | Maps to `QA_REPORT` artifact role. **A separate `qa-report.json` file must be written to `--output-dir`** — the QA dict must not exist only inside the candidate JSON; it must be a real, fetchable artifact. |
 | `sequence_sha256` | Can be used as a deterministic fingerprint; the primary media SHA-256 should be computed separately on the MP4 file bytes. |
+
+**Critical artifact-existence rule:** Every artifact role declared in the Generation Result (PRIMARY_MEDIA, PREVIEW, MANIFEST, QA_REPORT) must correspond to a real file at the declared URI in `--output-dir`. The runner must not declare a `QA_REPORT` artifact URI that points to a non-existent file, and must not rely on the QA dict being inside the manifest as a substitute for a standalone QA report file. Same for MANIFEST — if the manifest URI is declared, the file must exist.
 
 What needs adaptation:
 - The existing manifest uses `case_id`, `visual_case_id`, `track`, `provenance`, `files`, `sequence_sha256`, `qa`, and optionally `study`, `trial_review`, `spoken_semantics`, `visual_purpose`. The Contract V1 candidate uses `candidate_id`, `asset_family`, `candidate_status`, `duration_ms`, `suggested_placement`, `artifacts`, `qa`, `provenance`, `plugin_metadata`. The runner translates between these shapes.
@@ -216,39 +223,77 @@ What needs adaptation:
 
 **Answer:**
 
-**proposal_id** should be derived from plugin-owned deterministic inputs:
+**proposal_id** should be derived from plugin-owned deterministic inputs that include a content digest of the Opportunity, not just its `opportunity_id`:
+
 ```
 proposal_id = "prop-im-" + SHA256(
-  plugin_id + opportunity_id + suitability + case_mapping + route
+  plugin_id
+  + plugin_version
+  + opportunity_content_digest
+  + suitability
+  + case_mapping
+  + route
 )[:24]
+
+where:
+  opportunity_content_digest = SHA256(
+    canonical_json(opportunity.spoken_semantics,
+                   opportunity.visual_purpose,
+                   opportunity.target_duration_ms,
+                   opportunity.canvas,
+                   opportunity.language)
+  )
 ```
 
 Where:
 - `plugin_id`: `"org.deeptalk.illustrated-metaphor"` (constant)
-- `opportunity_id`: from the request
+- `plugin_version`: the runner's `__version__` string — ensures proposal identity changes when plugin logic materially changes
+- `opportunity_content_digest`: a hash of the canonical serialization of the Opportunity's material content fields — **not** merely `opportunity_id`. This ensures that if an Opportunity's content is tampered with but `opportunity_id` is reused, the `proposal_id` will differ.
 - `suitability`: `"SUITABLE"` / `"BORDERLINE"` / `"ABSTAIN"` (the assessed value)
 - `case_mapping`: the `visual_case_id` selected by the suitability function
 - `route`: `"approved_still"` or `"structured_hybrid"`
 
-This ensures the same Opportunity always produces the same `proposal_id`, across runs and across Core retries.
+**Tampering detection:** During generation, the runner must recompute `opportunity_content_digest` from the generation request's Opportunity and compare it to the value stored in the suitability response's `proposal_id`. If they differ, the runner must write a Generation Result with `operation_status: "FAILED"` and a `problem` indicating opportunity content mismatch. This prevents an attacker from reusing a `proposal_id` with a materially different Opportunity.
 
-**candidate_id** should be derived from:
+This ensures:
+- Same materially identical Opportunity + same plugin version → same `proposal_id`, across runs and across Core retries.
+- Different Opportunity content (even with same `opportunity_id`) → different `proposal_id` or a validation failure during generation.
+- Different plugin version → different `proposal_id` (the plugin's suitability/mapping logic may have changed).
+
+**candidate_id** should be derived from the internal render/scene representation, not from surface text fields alone:
+
 ```
 candidate_id = "cand-im-" + SHA256(
-  proposal_id + visual_case_id + route + duration_ms + candidate_text
+  proposal_id
+  + plugin_version
+  + internal_scene_digest
+  + route
+  + render_settings
 )[:24]
+
+where:
+  internal_scene_digest = SHA256(
+    visual_case_id
+    + case_dict_canonical_json  (scene_states, MetaphorSpec fields, candidate_text)
+    + duration_ms
+  )
+  render_settings = canonical_json(
+    canvas_width, canvas_height, framerate, pix_fmt, scale_filter
+  )
 ```
 
 Where:
-- `proposal_id`: as above
-- `visual_case_id`: the mapped case
+- `proposal_id`: as above (already includes opportunity content digest, suitability, case mapping)
+- `plugin_version`: the runner's `__version__` string
+- `internal_scene_digest`: a hash of the fully-resolved internal scene representation — the actual `MetaphorSpec`, scene states, and candidate text that drive SVG generation — not just the visible `candidate_text` label
 - `route`: the selected route
-- `duration_ms`: the actual rendered duration
-- `candidate_text`: the short Chinese label used in the SVG
+- `render_settings`: canonical serialization of canvas, framerate, pixel format, and scale settings
 
-This ensures that if the same proposal is generated twice, the candidate_id is identical (supporting binary-identical repeatability). A material change in any input (different case mapping, different duration, different text) produces a different candidate_id.
+This ensures that if the same proposal is generated twice, the candidate_id is identical. A material change in any internal scene input (different case mapping, different scene structure, different duration, different render settings) produces a different candidate_id.
 
-### Q10: Atomic result
+**Important:** candidate_id identity is **not** a proof of binary-identical MP4 output. Binary identity must be established independently by a repeatability test that compares SHA-256 hashes of fresh-rendered primary media (see Q14 and the repeatability test in the integration test plan).
+
+### Q10: Atomic result and failure semantics
 
 **Answer:** The runner must write the result JSON atomically:
 
@@ -262,21 +307,32 @@ os.replace(temp_path, result_path)
 
 This pattern is already used by Core's fake runner (`visual_asset_plugin_fakes.py` lines 64–66). The `os.replace()` call is atomic on POSIX and Windows for same-filesystem replacements.
 
-Additionally, the asset files (MP4, PNG, manifest) should be fully written before the result JSON is written. If any rendering step fails, the runner must:
-1. Write a Generation Result with `operation_status: "FAILED"` and a `problem` object.
-2. Exit 0 (the Core adapter treats non-zero exit as a process failure, not a plugin FAILED response).
-3. Never write a partial result file.
+Additionally, the asset files (MP4, PNG, manifest, QA report) should be fully written before the result JSON is written.
 
-The runner should also handle the suitability case: if suitability assessment fails for any reason, write a Suitability Response with `operation_status: "FAILED"` and a `problem`.
+**Failure semantics — the runner must distinguish two cases:**
+
+**Case A — Valid Contract request, plugin-level operation failure:**
+The runner received a well-formed request JSON with a valid Contract envelope, and was able to reliably parse it. The plugin itself can legitimately determine that the operation failed, was blocked, or is unavailable. In this case:
+- Write a valid Contract response/result with `operation_status: "FAILED"` (or `BLOCKED` / `UNAVAILABLE` as appropriate) and a `problem` object.
+- Exit 0.
+- The Core adapter will read the result as a legitimate plugin response.
+- Never write a partial result file.
+
+**Case B — Request malformed, Contract envelope invalid, or runner process/runtime failure:**
+The request JSON is malformed, the Contract envelope is invalid to the point where the runner cannot reliably construct a legitimate Contract response, or the runner process itself encounters a runtime failure (crash, unhandled exception, missing dependency). In this case:
+- **Fail closed.** Do not fabricate a seemingly-valid Plugin Contract raw response.
+- The runner may exit non-zero, write no result file, or write an error to stderr.
+- Core's execution evidence (exit code, stderr, timeout) will handle this as a process failure — not a plugin FAILED response.
+- This prevents the system from treating a protocol/runtime failure as a legitimate plugin judgment.
 
 ### Q11: Independent plugin version via --version
 
 **Answer:** The runner should establish an independent plugin version:
 
-1. Add `__version__ = "0.2.0-contract-runner"` to `src/illustrated_metaphor/__init__.py`.
+1. Add `__version__ = "0.2.0-contract-runner"` to `src/illustrated_metaphor/__init__.py` (or as a module-level constant in `contract.py`).
 2. `scripts/contract_runner.py --version` prints this version string and exits 0.
 3. Core's `resolve_plugin_version()` in `visual_plugin_adapter.py` calls `plugin_version_command` and uses the stdout as `plugin_version`. It validates that the output is a single non-empty line.
-4. The version string is independent of the `.codex-plugin/plugin.json` version (currently `"0.1.0"`) and independent of any Core release version.
+4. The version string is independent of the `.codex-plugin/plugin.json` version (currently `"0.1.0"`) and independent of any Core release version. The `.codex-plugin/plugin.json` is **not modified** — the runner version is a runner-owned concept, not a Codex plugin manifest concept.
 5. Core's adapter validates `response["plugin_version"] == resolved_version`, so the runner must echo this exact version in every response.
 
 Recommended version: `"0.2.0-contract-runner"` — signals that this is the first version with Contract V1 runner support, distinct from the R&D prototype version.
@@ -355,13 +411,16 @@ Expected outcome:
 - `sequence_sha256` is computed from `b"".join(Path(item).read_bytes() for item in files[2:])` — ordered, deterministic.
 
 **Conditions for binary-identical Contract V1 results:**
-1. Same Opportunity input → same `visual_case_id`, `route`, `candidate_text`.
-2. Same case → same SVG → same PNG → same MP4 → same SHA-256.
-3. Same `proposal_id` and `candidate_id` (deterministic from inputs).
-4. Same `suggested_placement` (derived from `a_roll_window`, not random).
-5. Same `duration_ms` (derived from `target_duration_ms` / FFmpeg encoding).
-6. Same artifact URIs (deterministic relative paths).
-7. `sort_keys=True` in JSON serialization (matching Core's fake runner pattern).
+1. Same Opportunity input → same `visual_case_id`, `route`, `candidate_text`, `internal_scene_digest`.
+2. Same case → same SVG → same PNG → same MP4 → same primary media SHA-256.
+3. Same `proposal_id` (deterministic from opportunity content digest + plugin version + suitability + case mapping + route).
+4. Same `candidate_id` (deterministic from proposal_id + plugin version + internal scene digest + route + render settings).
+5. Same `suggested_placement` (derived from `a_roll_window`, not random).
+6. Same `duration_ms` (derived from `target_duration_ms` / FFmpeg encoding).
+7. Same artifact URIs (deterministic relative paths).
+8. `sort_keys=True` in JSON serialization (matching Core's fake runner pattern).
+
+> **Note:** `candidate_id` identity confirms that the same internal scene and render settings were used. It does **not** by itself prove that the output MP4 is binary-identical. Binary identity must be established by an independent repeatability test (SHA-256 comparison of fresh-rendered primary media). See the integration test `test_two_fresh_runs_produce_identical_sha256`.
 
 **Risk to binary identity:**
 - **FFmpeg metadata timestamps:** FFmpeg may embed creation time in MP4 metadata. The existing renderer does not pass `-metadata creation_time=0`. This should be added in the runner to ensure binary-identical MP4s. Alternatively, the runner can strip metadata with `-map_metadata -1`.
@@ -374,7 +433,7 @@ Expected outcome:
 
 **Answer:**
 
-1. **Canvas mismatch:** Current renderer outputs 1280×720; Contract V1 Opportunities specify 1920×1080. The runner must scale. This is a low-risk blocker — FFmpeg can scale deterministically.
+1. **Canvas mismatch — open capability boundary:** Current renderer outputs 1280×720; Contract V1 Opportunities may specify 1920×1080. This is **not** a settled architecture — it is an open question. The preferred path is to investigate whether the SVG/vector pipeline can rasterize at the requested canvas natively. Fallback: FFmpeg scaling (to be validated for quality). If the renderer truly only supports 1280×720, the runner should declare a capability boundary and may ABSTAIN on unsupported canvas sizes rather than silently degrading quality. **Quality-first.**
 
 2. **macOS dependency:** `sips` is macOS-only. Core's adapter runs locally on macOS (evidenced by the existing pipeline), but this limits portability. Not a blocker for the current environment, but should be documented.
 
@@ -388,7 +447,7 @@ Expected outcome:
 
 7. **Atomic result writing pattern:** The existing `cli.py` writes manifests non-atomically (`write_text` directly). The runner must use `temp + os.replace()`.
 
-8. **Canvas in SVG:** The SVG has `width="1280" height="720"` hardcoded. The runner should either modify the SVG generation to accept a canvas parameter (requires modifying `art.py`) or render at 1280×720 and scale via FFmpeg. The latter avoids modifying production source.
+8. **Canvas in SVG:** The SVG has `width="1280" height="720"` hardcoded. The implementation session should first investigate if the SVG viewBox can be parameterized to the requested canvas without modifying production source. If not, FFmpeg scaling is a fallback hypothesis — but quality must be validated. If neither produces acceptable quality, the runner should declare the canvas as a capability boundary and ABSTAIN on unsupported sizes.
 
 ### Q16: Where NOT to copy MG internals
 
@@ -442,7 +501,8 @@ The runner must preserve Illustrated Metaphor's family identity:
 | `src/illustrated_metaphor/contract.py` | NEW | ~250 | Pure functions: `assess_suitability(opportunity)`, `map_opportunity_to_case(opportunity)`, `build_suitability_response(request, ...)`, `build_generation_result(request, output_dir)`, `translate_qa(qa_result)`, `build_artifacts(asset, output_dir)`. |
 | `src/illustrated_metaphor/__init__.py` | MODIFY | +1 | Add `__version__ = "0.2.0-contract-runner"`. |
 | `tests/test_contract.py` | NEW | ~200 | Fast unit tests for all pure functions in `contract.py`. |
-| `.codex-plugin/plugin.json` | MODIFY | +1 | Bump version or add contract_version field. |
+
+> `.codex-plugin/plugin.json` is **not** in the proposed file changes. Runner version is established via `__version__` module constant + `--version` flag, independent of the Codex plugin manifest.
 
 ## Proposed tests
 
@@ -521,11 +581,13 @@ Expected:
 **Contract V1 runner additions needed:**
 1. Add `-map_metadata -1` to FFmpeg to strip variable timestamps from MP4.
 2. Use `sort_keys=True` and `separators=(",", ":")` in all JSON serialization.
-3. Derive `proposal_id` and `candidate_id` from deterministic inputs only.
-4. Derive `suggested_placement` from `a_roll_window` deterministically (use the full window or a deterministic sub-window).
-5. Derive `candidate_text` deterministically from `spoken_semantics` (first clause or keyword extraction).
+3. Derive `proposal_id` from `opportunity_content_digest` + `plugin_version` + suitability + case mapping + route (not just `opportunity_id`).
+4. Derive `candidate_id` from `proposal_id` + `plugin_version` + `internal_scene_digest` + route + render settings (not just surface text fields).
+5. Derive `suggested_placement` from `a_roll_window` deterministically (use the full window or a deterministic sub-window).
+6. Derive `candidate_text` deterministically from `spoken_semantics` (first clause or keyword extraction).
+7. **Binary identity is established by independent SHA-256 repeatability tests,** not by candidate_id equality.
 
-**Verdict:** Two fresh runs of the same Opportunity will produce binary-identical primary media SHA-256 values, given the same macOS/sips/ffmpeg environment. The MP4 file bytes may differ in metadata headers unless `-map_metadata -1` is added.
+**Verdict:** Two fresh runs of the same Opportunity will produce binary-identical primary media SHA-256 values, given the same macOS/sips/ffmpeg environment. The MP4 file bytes may differ in metadata headers unless `-map_metadata -1` is added. This must be verified by an independent repeatability test, not assumed from candidate_id identity.
 
 ## Output-dir/path-safety design
 
@@ -541,23 +603,25 @@ Expected:
 
 | Existing artifact | Contract V1 artifact role | Translation |
 |---|---|---|
-| `asset.mp4` | PRIMARY_MEDIA | Add `media_type: "video/mp4"`, `sha256`, `duration_ms`. URI: `local-runner://<candidate_id>/b1_metaphor_system/<route>/asset.mp4`. |
-| `contact-sheet.png` | PREVIEW | Add `media_type: "image/png"`. URI: `local-runner://<candidate_id>/b1_metaphor_system/<route>/contact-sheet.png`. |
-| `manifest.json` | MANIFEST | Add `media_type: "application/json"`. URI: `local-runner://<candidate_id>/b1_metaphor_system/<route>/manifest.json`. |
-| `qa` dict in manifest | QA_REPORT | Extract `qa` dict, add `media_type: "application/json"`. URI: same as MANIFEST or separate `qa.json`. |
-| `run_qa()` result | candidate `qa` field | `{"status": "PASSED" if result["passed"] else "FAILED", "summary": ...}`. |
+| `asset.mp4` | PRIMARY_MEDIA | Add `media_type: "video/mp4"`, `sha256`, `duration_ms`. URI: `local-runner://<candidate_id>/b1_metaphor_system/<route>/asset.mp4`. **File must exist in `--output-dir`.** |
+| `contact-sheet.png` | PREVIEW | Add `media_type: "image/png"`. URI: `local-runner://<candidate_id>/b1_metaphor_system/<route>/contact-sheet.png`. **File must exist in `--output-dir`.** |
+| `manifest.json` | MANIFEST | Add `media_type: "application/json"`. URI: `local-runner://<candidate_id>/b1_metaphor_system/<route>/manifest.json`. **File must exist in `--output-dir`.** |
+| `qa-report.json` (NEW file) | QA_REPORT | The runner must write a **standalone `qa-report.json` file** to `--output-dir`, not rely on the QA dict inside `manifest.json`. URI: `local-runner://<candidate_id>/b1_metaphor_system/<route>/qa-report.json`. **File must exist in `--output-dir`.** |
+| `run_qa()` result | candidate `qa` field | `{"status": "PASSED" if result["passed"] else "FAILED", "summary": ...}`. Also written as `qa-report.json` artifact. |
+
+> **Artifact-existence rule:** Every artifact URI declared in the Generation Result must point to a real file in `--output-dir`. The runner must not declare a `QA_REPORT` URI that only resolves to a dict inside another JSON file. Each declared artifact role must have its own physical file.
 
 ## Blockers/risks
 
 | Risk | Severity | Mitigation |
 |---|---|---|
-| Canvas 1280×720 vs 1920×1080 | Low | FFmpeg scale filter or modify SVG viewBox. Prefer FFmpeg scaling to avoid modifying production source. |
+| Canvas 1280×720 vs 1920×1080 | **Medium** | **Quality-first.** Investigate native SVG rasterization at requested canvas. Fallback: FFmpeg scaling (validate quality). If renderer only supports fixed canvas: declare capability boundary, ABSTAIN on unsupported sizes. Do not silently degrade. |
 | sips macOS-only | Low (environment) | Document as macOS-only. Not a blocker for current environment. |
 | Suitability keyword matcher false positives | Medium | Carefully design ABSTAIN triggers (numeric keywords, percentage patterns). Test against all eight CB patterns. |
 | FFmpeg metadata timestamps | Low | Add `-map_metadata -1` to FFmpeg commands in runner path. |
 | duration_ms quantization | Low | Clamp to 3–10s, round to nearest frame count. Report actual duration. |
 | No existing contract_runner.py | Expected | This is the implementation work. The readiness plan is complete. |
-| plugin_version not defined | Low | Add `__version__` to `__init__.py`. |
+| plugin_version not defined | Low | Add `__version__` to `__init__.py`. Do not modify `.codex-plugin/plugin.json`. |
 
 ## Exact recommendation for future implementation
 
@@ -570,8 +634,8 @@ Expected:
    - `build_generation_result(request: dict, output_dir: Path) -> dict` → Contract V1 generation result
    - `translate_qa(qa_result: dict) -> dict` → `{"status": "PASSED"/"FAILED", "summary": ...}`
    - `build_artifacts(asset: dict, output_dir: Path, candidate_id: str) -> list[dict]` → artifact list
-   - `compute_proposal_id(plugin_id, opportunity_id, suitability, case_id, route) -> str`
-   - `compute_candidate_id(proposal_id, case_id, route, duration_ms, text) -> str`
+   - `compute_proposal_id(plugin_id, plugin_version, opportunity_content_digest, suitability, case_id, route) -> str`
+   - `compute_candidate_id(proposal_id, plugin_version, internal_scene_digest, route, render_settings) -> str`
 
 3. **Add `__version__` to `__init__.py`**: `"0.2.0-contract-runner"`.
 
@@ -593,10 +657,14 @@ Expected:
 
 9. **Test plan:** 20+ fast unit tests in `test_contract.py`. 3 integration tests in `test_contract_runner_integration.py` (requires sips + ffmpeg).
 
-10. **Determinism:** Add `-map_metadata -1` to FFmpeg in the runner's generation path (not in the existing `render.py` — do it in the runner or as a post-processing step).
+  10. **For generation:** Always produce one actual asset. If rendering fails (Case A — valid request, plugin-level failure), return `FAILED` with a `problem`, exit 0. If the request is malformed or the runner crashes (Case B — protocol/runtime failure), fail closed: non-zero exit or no result file. If QA fails, return `COMPLETED` with `candidate_status: QA_REJECTED`.
+  11. **Artifact existence:** Every artifact role (PRIMARY_MEDIA, PREVIEW, MANIFEST, QA_REPORT) declared in the Generation Result must have a real file in `--output-dir`. Write a standalone `qa-report.json` file — do not rely on the QA dict inside `manifest.json`.
+  12. **Determinism:** Add `-map_metadata -1` to FFmpeg in the runner's generation path (not in the existing `render.py` — do it in the runner or as a post-processing step). Binary identity must be proven by independent SHA-256 repeatability tests.
 
 ## Confirmation
 
-- **No production source changed:** This plan adds only new files (`scripts/contract_runner.py`, `src/illustrated_metaphor/contract.py`, `tests/test_contract.py`) and makes one trivial modification (`__init__.py` +1 line, `.codex-plugin/plugin.json` +1 field). No existing render/art/vocabulary/motion/qa/benchmark/scene/common_briefs module is modified.
-- **Core/other plugins untouched:** `HWang0310/deep-talk-studio` was read-only at `d1c990c25e44aa55ffc2789f7b00ee2374a198be`. No other plugin repository was modified.
+- **No production source changed:** This plan adds only new files (`scripts/contract_runner.py`, `src/illustrated_metaphor/contract.py`, `tests/test_contract.py`) and makes one trivial modification (`__init__.py` +1 line for `__version__`). No existing render/art/vocabulary/motion/qa/benchmark/scene/common_briefs module is modified.
+- **`.codex-plugin/plugin.json` not modified:** The runner version is a runner-owned concept (module constant + `--version` flag), independent of the Codex plugin manifest.
+- **Core/other plugins untouched:** `HWang0310/deep-talk-studio` branch `agent/multi-asset-studio` @ `d1c990c25e44aa55ffc2789f7b00ee2374a198be` (read-only — **not Core main**). No other plugin repository was modified.
+- **No runner implementation started:** This is a docs-only readiness audit. No production runner code has been written.
 - **No main/tag/release:** This is a docs-only research branch `agent/contract-v1-runner-readiness`. No merge to main, no tag, no release.
