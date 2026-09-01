@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -486,6 +487,16 @@ def _scale_svg(svg_path: Path, target_width: int, target_height: int) -> None:
     svg_path.write_text(content, encoding="utf-8")
 
 
+def _measure_mp4_duration_ms(mp4_path: Path) -> int:
+    """Measure actual MP4 duration in milliseconds using ffprobe."""
+    result = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+         "-of", "default=noprint_wrappers=1:nokey=1", str(mp4_path)],
+        capture_output=True, text=True, check=True,
+    )
+    return round(float(result.stdout.strip()) * 1000)
+
+
 def build_generation_result(request: dict, output_dir: Path) -> dict:
     """Build a Contract V1 generation result.
 
@@ -516,6 +527,23 @@ def build_generation_result(request: dict, output_dir: Path) -> dict:
             "problem": {
                 "code": "OPPORTUNITY_CONTENT_MISMATCH",
                 "message": "opportunity content digest does not match the proposal_id",
+                "retryability": False,
+            },
+        }
+
+    # C4: ABSTAIN generation fail closed — do not enter renderer
+    if suitability == "ABSTAIN":
+        return {
+            "contract_version": CONTRACT_VERSION,
+            "request_id": request["request_id"],
+            "opportunity_id": opportunity["opportunity_id"],
+            "proposal_id": proposal_id,
+            "plugin_id": PLUGIN_ID,
+            "plugin_version": PLUGIN_VERSION,
+            "operation_status": "FAILED",
+            "problem": {
+                "code": "SUITABILITY_ABSTAIN",
+                "message": "generation requested for ABSTAIN opportunity; runner fails closed",
                 "retryability": False,
             },
         }
@@ -572,59 +600,95 @@ def build_generation_result(request: dict, output_dir: Path) -> dict:
         },
     )
 
-    # Scale SVG files for requested canvas (post-process, not modifying production source)
+    # --- Post-process: re-encode for determinism, re-rasterize if needed ---
+    from .render import _run
+    from .render import contact_sheet as _contact_sheet
+
+    frame_dir = output_dir / candidate_id / "b1_metaphor_system" / route / "sequence"
+    mp4_path = frame_dir.parent / "asset.mp4"
+    pattern = str(frame_dir / "frame_%03d.png")
+    frame_count = len(case_dict["scene_states"]) if route != "approved_still" else 1
+
+    # For non-native canvas: scale SVGs and re-rasterize at target resolution
     if canvas_w != 1280 or canvas_h != 720:
-        frame_dir = output_dir / candidate_id / "b1_metaphor_system" / route / "sequence"
         for svg_file in frame_dir.glob("*.svg"):
             _scale_svg(svg_file, canvas_w, canvas_h)
-        # Re-rasterize PNGs at target resolution
-        from .render import _run
         for svg_file in sorted(frame_dir.glob("*.svg")):
             png_file = svg_file.with_suffix(".png")
             _run(["sips", "-s", "format", "png", str(svg_file), "--out", str(png_file)])
-        # Re-assemble MP4 with metadata stripping for determinism
-        mp4_path = frame_dir.parent / "asset.mp4"
-        pattern = str(frame_dir / "frame_%03d.png")
-        frame_count = len(case_dict["scene_states"]) if route != "approved_still" else 1
-        # Use the same assembly parameters but add -map_metadata -1
-        if route == "approved_still":
-            source = pattern.replace("%03d", "001")
-            zoom = f"zoompan=z='min(zoom+0.00035,1.035)':x='iw/2-(iw/zoom/2)+on*0.05':y='ih/2-(ih/zoom/2)':d={duration_seconds * 24}:s={canvas_w}x{canvas_h}:fps=24,fade=t=in:st=0:d=0.35"
-            _run(["ffmpeg", "-y", "-loop", "1", "-i", source, "-vf", zoom, "-t", str(duration_seconds), "-r", "24", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-map_metadata", "-1", str(mp4_path)])
-        else:
-            framerate = frame_count / duration_seconds
-            _run(["ffmpeg", "-y", "-framerate", str(framerate), "-i", pattern, "-r", "24", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-map_metadata", "-1", str(mp4_path)])
-        # Re-generate contact sheet
-        from .render import contact_sheet
-        contact_path = frame_dir.parent / "contact-sheet.png"
-        contact_sheet(pattern, frame_count, contact_path)
-        # Update files list
-        asset["files"] = [str(mp4_path), str(contact_path)] + [str(p) for p in sorted(frame_dir.glob("*.png"))]
-        asset["sequence_sha256"] = hashlib.sha256(
-            b"".join(Path(item).read_bytes() for item in asset["files"][2:])
-        ).hexdigest()
-        asset["qa"] = asset.get("qa", {})  # Keep existing QA
-        # Re-write manifest
-        (frame_dir.parent / "manifest.json").write_text(
-            json.dumps(asset, ensure_ascii=False, indent=2), encoding="utf-8"
+
+    # Re-encode MP4 with metadata stripping for determinism
+    if route == "approved_still":
+        source = pattern.replace("%03d", "001")
+        zoom = (
+            f"zoompan=z='min(zoom+0.00035,1.035)':x='iw/2-(iw/zoom/2)+on*0.05'"
+            f":y='ih/2-(ih/zoom/2)':d={duration_seconds * 24}"
+            f":s={canvas_w}x{canvas_h}:fps=24,fade=t=in:st=0:d=0.35"
         )
+        _run(["ffmpeg", "-y", "-loop", "1", "-i", source, "-vf", zoom,
+              "-t", str(duration_seconds), "-r", "24", "-pix_fmt", "yuv420p",
+              "-movflags", "+faststart", "-map_metadata", "-1", str(mp4_path)])
     else:
-        # For 1280×720, still strip MP4 metadata for determinism
-        from .render import _run
-        frame_dir = output_dir / candidate_id / "b1_metaphor_system" / route / "sequence"
-        mp4_path = frame_dir.parent / "asset.mp4"
-        pattern = str(frame_dir / "frame_%03d.png")
-        frame_count = len(case_dict["scene_states"]) if route != "approved_still" else 1
-        if route == "approved_still":
-            source = pattern.replace("%03d", "001")
-            zoom = f"zoompan=z='min(zoom+0.00035,1.035)':x='iw/2-(iw/zoom/2)+on*0.05':y='ih/2-(ih/zoom/2)':d={duration_seconds * 24}:s=1280x720:fps=24,fade=t=in:st=0:d=0.35"
-            _run(["ffmpeg", "-y", "-loop", "1", "-i", source, "-vf", zoom, "-t", str(duration_seconds), "-r", "24", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-map_metadata", "-1", str(mp4_path)])
-        else:
-            framerate = frame_count / duration_seconds
-            _run(["ffmpeg", "-y", "-framerate", str(framerate), "-i", pattern, "-r", "24", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-map_metadata", "-1", str(mp4_path)])
+        framerate = frame_count / duration_seconds
+        _run(["ffmpeg", "-y", "-framerate", str(framerate), "-i", pattern,
+              "-r", "24", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+              "-map_metadata", "-1", str(mp4_path)])
+
+    # Regenerate contact sheet for non-native canvas
+    if canvas_w != 1280 or canvas_h != 720:
+        contact_path = frame_dir.parent / "contact-sheet.png"
+        _contact_sheet(pattern, frame_count, contact_path)
+
+    # Update asset with final files
+    asset["files"] = [str(mp4_path), str(frame_dir.parent / "contact-sheet.png")] + [
+        str(p) for p in sorted(frame_dir.glob("*.png"))
+    ]
+    asset["sequence_sha256"] = hashlib.sha256(
+        b"".join(Path(item).read_bytes() for item in asset["files"][2:])
+    ).hexdigest()
+
+    # C3: Re-run QA on final artifacts (not the pre-postprocess QA)
+    from .qa import run_qa
+    asset["qa"] = run_qa(asset)
+
+    # Re-write manifest with final QA
+    (frame_dir.parent / "manifest.json").write_text(
+        json.dumps(asset, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    # C1: Measure actual MP4 duration
+    actual_duration_ms = _measure_mp4_duration_ms(mp4_path)
+
+    # C1: Compute suggested_placement from actual duration, contained in a_roll_window
+    a_roll_window = opportunity.get(
+        "a_roll_window", {"start_ms": 0, "end_ms": actual_duration_ms},
+    )
+    window_duration = a_roll_window["end_ms"] - a_roll_window["start_ms"]
+    if actual_duration_ms > window_duration:
+        return {
+            "contract_version": CONTRACT_VERSION,
+            "request_id": request["request_id"],
+            "opportunity_id": opportunity["opportunity_id"],
+            "proposal_id": proposal_id,
+            "plugin_id": PLUGIN_ID,
+            "plugin_version": PLUGIN_VERSION,
+            "operation_status": "FAILED",
+            "problem": {
+                "code": "PLACEMENT_WINDOW_INSUFFICIENT",
+                "message": (
+                    f"actual media duration {actual_duration_ms}ms exceeds "
+                    f"a_roll_window {window_duration}ms"
+                ),
+                "retryability": False,
+            },
+        }
+    suggested_placement = {
+        "start_ms": a_roll_window["start_ms"],
+        "end_ms": a_roll_window["start_ms"] + actual_duration_ms,
+    }
 
     # Write standalone qa-report.json
-    qa_translated = _translate_qa(asset.get("qa", {"passed": False, "failures": ["no QA data"]}))
+    qa_translated = _translate_qa(asset["qa"])
     qa_report_path = output_dir / candidate_id / "b1_metaphor_system" / route / "qa-report.json"
     qa_report_path.parent.mkdir(parents=True, exist_ok=True)
     qa_report_path.write_text(
@@ -635,21 +699,14 @@ def build_generation_result(request: dict, output_dir: Path) -> dict:
     # Build artifacts
     artifacts = _build_artifacts(asset, output_dir, candidate_id)
 
-    # Build candidate
-    a_roll_window = opportunity.get("a_roll_window", {"start_ms": 0, "end_ms": target_duration_ms})
-    suggested_placement = {
-        "start_ms": a_roll_window["start_ms"],
-        "end_ms": a_roll_window["end_ms"],
-    }
-
-    # Determine candidate status from QA
+    # Determine candidate status from final QA
     candidate_status = "READY" if qa_translated["status"] == "PASSED" else "QA_REJECTED"
 
     candidate = {
         "candidate_id": candidate_id,
         "asset_family": ASSET_FAMILY,
         "candidate_status": candidate_status,
-        "duration_ms": target_duration_ms,
+        "duration_ms": actual_duration_ms,
         "suggested_placement": suggested_placement,
         "artifacts": artifacts,
         "qa": qa_translated,
@@ -664,6 +721,7 @@ def build_generation_result(request: dict, output_dir: Path) -> dict:
             "canvas_decision": canvas_note,
             "render_settings": r_settings,
             "internal_scene_digest": scene_digest,
+            "requested_duration_ms": target_duration_ms,
         },
     }
 

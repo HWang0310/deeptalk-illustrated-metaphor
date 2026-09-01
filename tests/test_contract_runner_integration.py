@@ -98,7 +98,9 @@ class ContractRunnerIntegrationTests(unittest.TestCase):
             self.assertEqual(candidate["candidate_status"], "READY")
             self.assertEqual(candidate["asset_family"], "Illustrated Metaphor")
             self.assertTrue(candidate["candidate_id"].startswith("cand-im-"))
-            self.assertEqual(candidate["duration_ms"], 5000)
+
+            # C1: duration_ms must reflect actual MP4 duration (within 100ms of 5000ms)
+            self.assertLessEqual(abs(candidate["duration_ms"] - 5000), 100)
 
             # Verify placement within a_roll_window
             placement = candidate["suggested_placement"]
@@ -208,13 +210,21 @@ class ContractRunnerIntegrationTests(unittest.TestCase):
         self.assertEqual(suit_response["operation_status"], "COMPLETED")
         self.assertTrue(suit_response["proposal_id"].startswith("prop-im-"))
 
-        # In a real Core pipeline, generation would NOT be requested for ABSTAIN.
-        # We verify that if someone were to send a generation request anyway,
-        # the runner would detect the opportunity content mismatch (tampering).
-        # But here we simply verify the suitability response is correct.
-        # The generation result for ABSTAIN would return FAILED with
-        # OPPORTUNITY_CONTENT_MISMATCH because the case_id and route are
-        # different from what was used to compute the proposal_id.
+    def test_abstain_generation_fails_closed(self):
+        """C4: ABSTAIN generation request → FAILED with SUITABILITY_ABSTAIN, no Candidate."""
+        # Compute proposal_id from the ABSTAIN opportunity
+        suit_req = _suitability_request(_ABSTAIN_OPPORTUNITY)
+        suit_response = build_suitability_response(suit_req)
+        proposal_id = suit_response["proposal_id"]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir)
+            gen_req = _generation_request(_ABSTAIN_OPPORTUNITY, proposal_id)
+            gen_result = build_generation_result(gen_req, output_dir)
+
+            self.assertEqual(gen_result["operation_status"], "FAILED")
+            self.assertEqual(gen_result["problem"]["code"], "SUITABILITY_ABSTAIN")
+            self.assertNotIn("candidate", gen_result)
 
     def test_proposal_id_tampering_detection(self):
         """Tampering: different opportunity content with same proposal_id → FAILED."""
@@ -254,6 +264,203 @@ class ContractRunnerIntegrationTests(unittest.TestCase):
 
             self.assertEqual(gen_result["operation_status"], "BLOCKED")
             self.assertEqual(gen_result["problem"]["code"], "UNSUPPORTED_CANVAS")
+
+    def test_non_integer_second_duration_matches_actual_mp4(self):
+        """C1: target_duration_ms=5500 → actual MP4 ~5000ms, declared duration within 100ms tolerance."""
+        opp = dict(_SYNTHETIC_OPPORTUNITY)
+        opp["target_duration_ms"] = 5500
+        opp["a_roll_window"] = {"start_ms": 10000, "end_ms": 20000}
+        opp["opportunity_id"] = "opp-im-noninteger-01"
+
+        suit_req = _suitability_request(opp)
+        suit_response = build_suitability_response(suit_req)
+        proposal_id = suit_response["proposal_id"]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir)
+            gen_req = _generation_request(opp, proposal_id)
+            gen_result = build_generation_result(gen_req, output_dir)
+
+            self.assertEqual(gen_result["operation_status"], "COMPLETED")
+            candidate = gen_result["candidate"]
+
+            # Declared duration must reflect actual MP4, not the requested 5500ms
+            declared_duration = candidate["duration_ms"]
+            self.assertNotEqual(declared_duration, 5500)
+
+            # Measure actual MP4 duration via ffprobe
+            primary = next(a for a in candidate["artifacts"] if a["role"] == "PRIMARY_MEDIA")
+            primary_path = output_dir / primary["uri"][len("local-runner://"):]
+            probe = subprocess.run(
+                ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                 "-of", "default=noprint_wrappers=1:nokey=1", str(primary_path)],
+                capture_output=True, text=True, check=True,
+            )
+            actual_sec = float(probe.stdout.strip())
+            actual_ms = round(actual_sec * 1000)
+
+            # Declared duration must be within 100ms of actual MP4 duration
+            self.assertLessEqual(
+                abs(declared_duration - actual_ms), 100,
+                f"declared {declared_duration}ms vs actual {actual_ms}ms exceeds 100ms tolerance",
+            )
+
+            # requested_duration_ms preserved in plugin_metadata
+            self.assertEqual(candidate["plugin_metadata"]["requested_duration_ms"], 5500)
+
+            # suggested_placement must be fully contained in a_roll_window
+            placement = candidate["suggested_placement"]
+            self.assertGreaterEqual(placement["start_ms"], 10000)
+            self.assertLessEqual(placement["end_ms"], 20000)
+            # placement duration must match declared duration
+            placement_duration = placement["end_ms"] - placement["start_ms"]
+            self.assertLessEqual(abs(placement_duration - declared_duration), 100)
+
+    def test_qa_runs_on_final_artifacts(self):
+        """C3: QA report reflects final post-processed artifacts, not pre-postprocess QA."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir)
+
+            suit_req = _suitability_request(_SYNTHETIC_OPPORTUNITY)
+            suit_response = build_suitability_response(suit_req)
+            proposal_id = suit_response["proposal_id"]
+
+            gen_req = _generation_request(_SYNTHETIC_OPPORTUNITY, proposal_id)
+            gen_result = build_generation_result(gen_req, output_dir)
+
+            self.assertEqual(gen_result["operation_status"], "COMPLETED")
+            candidate = gen_result["candidate"]
+
+            # Read the standalone qa-report.json from output_dir
+            qa_artifact = next(a for a in candidate["artifacts"] if a["role"] == "QA_REPORT")
+            qa_path = output_dir / qa_artifact["uri"][len("local-runner://"):]
+            qa_report = json.loads(qa_path.read_text(encoding="utf-8"))
+
+            # Candidate qa must match the standalone qa-report.json
+            self.assertEqual(candidate["qa"]["status"], qa_report["status"])
+            self.assertEqual(candidate["qa"]["summary"], qa_report["summary"])
+
+            # Read manifest.json and verify its QA matches final
+            manifest_artifact = next(a for a in candidate["artifacts"] if a["role"] == "MANIFEST")
+            manifest_path = output_dir / manifest_artifact["uri"][len("local-runner://"):]
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest_qa = manifest.get("qa", {})
+            self.assertEqual(manifest_qa.get("passed"), candidate["qa"]["status"] == "PASSED")
+
+            # Verify QA passed on final artifacts (files exist)
+            for f in manifest.get("files", []):
+                self.assertTrue(Path(f).is_file(), f"final artifact missing: {f}")
+
+
+class ContractRunner1920Tests(unittest.TestCase):
+    """C2: Real 1920x1080 canonical CLI generation tests."""
+
+    @staticmethod
+    def _opp_1080():
+        return {
+            "opportunity_id": "opp-im-1080-01",
+            "spoken_semantics": "持续累积的资源占用使分散的压力开始集中出现。",
+            "visual_purpose": "让观众看到积累→压力→临界的变化过程。",
+            "a_roll_window": {"start_ms": 12000, "end_ms": 17000},
+            "target_duration_ms": 5000,
+            "language": "zh-CN",
+            "canvas": {"width": 1920, "height": 1080},
+        }
+
+    def test_1920x1080_cli_generation_real_resolution(self):
+        """C2: 1920x1080 CLI generation → frame PNGs and MP4 at actual 1920x1080."""
+        opp = self._opp_1080()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+            output_dir = tmpdir / "output"
+
+            # Suitability
+            suit_req_path = tmpdir / "suit_request.json"
+            suit_result_path = tmpdir / "suit_result.json"
+            suit_request = _suitability_request(opp)
+            suit_req_path.write_text(
+                json.dumps(suit_request, ensure_ascii=False, sort_keys=True),
+                encoding="utf-8",
+            )
+
+            result = subprocess.run(
+                [sys.executable, "scripts/contract_runner.py",
+                 "--request", str(suit_req_path),
+                 "--result", str(suit_result_path),
+                 "--output-dir", str(output_dir)],
+                capture_output=True, text=True, timeout=60, check=False,
+                cwd=str(Path(__file__).resolve().parents[1]),
+            )
+            self.assertEqual(result.returncode, 0, f"stderr: {result.stderr}")
+            suit_response = json.loads(suit_result_path.read_text(encoding="utf-8"))
+            proposal_id = suit_response["proposal_id"]
+
+            # Generation
+            gen_req_path = tmpdir / "gen_request.json"
+            gen_result_path = tmpdir / "gen_result.json"
+            gen_request = _generation_request(opp, proposal_id)
+            gen_req_path.write_text(
+                json.dumps(gen_request, ensure_ascii=False, sort_keys=True),
+                encoding="utf-8",
+            )
+
+            result = subprocess.run(
+                [sys.executable, "scripts/contract_runner.py",
+                 "--request", str(gen_req_path),
+                 "--result", str(gen_result_path),
+                 "--output-dir", str(output_dir)],
+                capture_output=True, text=True, timeout=120, check=False,
+                cwd=str(Path(__file__).resolve().parents[1]),
+            )
+            self.assertEqual(result.returncode, 0, f"stderr: {result.stderr}")
+
+            gen_response = json.loads(gen_result_path.read_text(encoding="utf-8"))
+            self.assertEqual(gen_response["operation_status"], "COMPLETED")
+            candidate = gen_response["candidate"]
+            self.assertEqual(candidate["candidate_status"], "READY")
+
+            # Verify PRIMARY_MEDIA is real 1920x1080
+            primary = next(a for a in candidate["artifacts"] if a["role"] == "PRIMARY_MEDIA")
+            primary_path = output_dir / primary["uri"][len("local-runner://"):]
+            self.assertTrue(primary_path.is_file())
+
+            # Probe MP4 resolution
+            probe = subprocess.run(
+                ["ffprobe", "-v", "error", "-select_streams", "v:0",
+                 "-show_entries", "stream=width,height",
+                 "-of", "default=noprint_wrappers=1:nokey=1", str(primary_path)],
+                capture_output=True, text=True, check=True,
+            )
+            lines = probe.stdout.strip().split("\n")
+            mp4_width = int(lines[0])
+            mp4_height = int(lines[1])
+            self.assertEqual(mp4_width, 1920, f"MP4 width is {mp4_width}, expected 1920")
+            self.assertEqual(mp4_height, 1080, f"MP4 height is {mp4_height}, expected 1080")
+
+            # Verify at least one frame PNG is 1920x1080 (not upscaled from 1280x720)
+            candidate_id = candidate["candidate_id"]
+            seq_dir = output_dir / candidate_id / "b1_metaphor_system" / "structured_hybrid" / "sequence"
+            png_files = sorted(seq_dir.glob("*.png"))
+            self.assertTrue(len(png_files) > 0)
+
+            # Check first frame PNG dimensions via sips
+            sips_result = subprocess.run(
+                ["sips", "-g", "pixelWidth", "-g", "pixelHeight", str(png_files[0])],
+                capture_output=True, text=True, check=True,
+            )
+            png_w = None
+            png_h = None
+            for line in sips_result.stdout.strip().split("\n"):
+                if "pixelWidth" in line:
+                    png_w = int(line.split(":")[-1].strip())
+                if "pixelHeight" in line:
+                    png_h = int(line.split(":")[-1].strip())
+            self.assertEqual(png_w, 1920, f"frame PNG width is {png_w}, expected 1920")
+            self.assertEqual(png_h, 1080, f"frame PNG height is {png_h}, expected 1080")
+
+            # Verify canvas reported in plugin_metadata
+            self.assertEqual(candidate["plugin_metadata"]["canvas"]["width"], 1920)
+            self.assertEqual(candidate["plugin_metadata"]["canvas"]["height"], 1080)
 
 
 class ContractRunnerCLITests(unittest.TestCase):

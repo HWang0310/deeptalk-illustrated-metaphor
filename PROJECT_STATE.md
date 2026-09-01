@@ -1,6 +1,17 @@
+---
+AIGC:
+  ContentProducer: '001191110102MAD55U9H0F10002'
+  ContentPropagator: '001191110102MAD55U9H0F10002'
+  Label: '1'
+  ProduceID: '84d8a35b-d64d-4386-beaa-6ba3820d4e63'
+  PropagateID: '84d8a35b-d64d-4386-beaa-6ba3820d4e63'
+  ReservedCode1: '5fb59a97-39fd-439e-b1a6-54b1101b60dc'
+  ReservedCode2: '5fb59a97-39fd-439e-b1a6-54b1101b60dc'
+---
+
 # Project State
 
-**Updated:** 2026-08-28 — V0.2 baseline accepted; Common Brief Trial evidence committed locally, with push status checked at handoff.
+**Updated:** 2026-09-01 — Visual Asset Plugin Contract V1 runner implemented (CORRECTION-1 applied), awaiting Nexus review.
 
 ## Current truth
 
@@ -22,6 +33,31 @@
 - B1 V0.2 is the current Track B research baseline. It is not a formal brand identity, mascot, or original character IP declaration. Track A remains frozen upstream reference; B2 remains a useful secondary actor-free comparator.
 - Common Brief Trial is complete as a comparison experiment, not V0.3: CB01/CB02/CB07 are BORDERLINE, CB03–CB06 are SUITABLE, and CB08 Numeric Evidence is an explicit ABSTAIN. Seven B1 assets are generated under `output/common-brief-trial/`; B2 and Track A generate no Common Brief asset.
 - The trial confirms family strengths in physical metaphor, agency, tension, feedback, and state change. It confirms limits in exact numbers, dense causal chains, and conditional logical judgments. No MG or Hand-drawn trial repository or output was inspected.
+
+## Visual Asset Plugin Contract V1 Runner
+
+- TASK_ID: DT-ILL-CV1-001
+- Implementation branch: `agent/contract-v1-runner-implementation`
+- Starting readiness SHA: `6f2af7d8da454ac061a8040242c6b4b66fc34d48`
+- Status: IMPLEMENTED_UNRELEASED / AWAITING_NEXUS_REVIEW
+- The Contract V1 runner implements the full Visual Asset Plugin Contract V1 specification:
+  - Deterministic suitability assessment (SUITABLE/BORDERLINE/ABSTAIN) via keyword matching
+  - Deterministic proposal_id and candidate_id computation (SHA-256 based)
+  - Real asset rendering via the existing SVG → sips → ffmpeg pipeline
+  - Actual MP4 duration measurement via ffprobe; Candidate.duration_ms reflects real media
+  - QA re-run on final post-processed artifacts (not pre-postprocess QA)
+  - ABSTAIN generation fails closed (FAILED with SUITABILITY_ABSTAIN, no Candidate)
+  - Canvas quality-first: 1920x1080 via SVG vector re-rasterization; non-16:9 → BLOCKED
+  - MP4 metadata stripped (`-map_metadata -1`) for binary repeatability
+  - Atomic result write (temp + os.replace)
+  - 73+ tests pass (25 existing + 38 unit + 10+ integration), ruff clean
+- Nexus reviewed initial implementation at SHA `06e938ed`; CORRECTION-1 applied for 5 issues:
+  1. Candidate duration reflects actual MP4 (ffprobe measurement)
+  2. Real 1920x1080 CLI integration test (frame/MP4 actual resolution verified)
+  3. QA runs on final post-processed artifacts
+  4. ABSTAIN generation fails closed
+  5. PROJECT_STATE.md updated
+- Not ACCEPTED, not PINNED, not RELEASED. Awaiting Nexus exact-SHA review.
 
 ## Next operational action
 
