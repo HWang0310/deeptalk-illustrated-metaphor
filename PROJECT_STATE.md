@@ -11,54 +11,63 @@ AIGC:
 
 # Project State
 
-**Updated:** 2026-09-01 — Visual Asset Plugin Contract V1 runner implemented (CORRECTION-1 applied), awaiting Nexus review.
+> Current operational truth. GitHub remote and exact reviewed SHAs override chat or local workspace claims.
 
-## Current truth
+## Identity
 
-- Repository initialized on `main`; public GitHub remote is configured.
-- V0 is a standalone dual-track R&D project. DeepTalk Core is out of scope and must remain unmodified.
-- The approved baseline is deterministic motion assembly from an approved still. Structured scene states and independent keyframes are comparison routes.
-- Upstream audit is complete at `91b560849e8f883922cc2fa8a358a668caa94105`; Track A provenance and attribution boundary are documented.
-- Seven benchmark cases produced 42 deterministic MP4 assets across two tracks and three routes. A repeated corpus has equal sequence SHA-256 values.
-- Two no-user-key model stills were generated as separate candidates. Model image-text and independent-keyframe consistency remain unverified.
-- A minimal plugin manifest validates the repository shape without defining a DeepTalk Core contract.
-- Initial V0 evidence commit: `2455b24818969e128798d3451db2b27a12c2d226`; check Git for current HEAD.
-- ChatGPT Product Review marked V0 R&D PASS and froze Track A as reference. Track B is now primary R&D.
-- V0.1 compared B1 Paper Relay and B2 Object Theatre on the same seven benchmarks. B1 is the current research baseline, with a generic actor grammar rather than a mascot.
-- Final V0.1 corpus has 35 assets and matching sequence hashes on repeat. The small B1 model study shows recognizable but insufficiently exact two-state consistency.
-- V0.1 implementation commit: `91e3afab8b3fa250fafc32c64893e8e8f5ad4085`; check Git for current HEAD.
-- V0.2 promotes B1 from a rendering hypothesis to a bounded original metaphor system: seven immutable specs define actor/object roles, spatial relation, focal point, state change, annotation placement, and motion opportunity. The generic actor stays anonymous; network effect is deliberately object-only.
-- V0.2 uses a first composable original vocabulary—load, barrier, bridge, container, stack, rope, wheel, threshold, crack, network node, path, gate, resource block, and signal card—implemented as project-owned SVG primitives, not upstream assets.
-- The V0.2 comparison corpus has 31 assets: 28 approved-still comparator assets across Track A, B1 V0.1, B1 V0.2, and B2; plus three selective B1 V0.2 structured-state assets. Fresh QA is 31/31 pass and repeat sequence hashes are 31/31 equal.
-- B1 V0.2 is the current Track B research baseline. It is not a formal brand identity, mascot, or original character IP declaration. Track A remains frozen upstream reference; B2 remains a useful secondary actor-free comparator.
-- Common Brief Trial is complete as a comparison experiment, not V0.3: CB01/CB02/CB07 are BORDERLINE, CB03–CB06 are SUITABLE, and CB08 Numeric Evidence is an explicit ABSTAIN. Seven B1 assets are generated under `output/common-brief-trial/`; B2 and Track A generate no Common Brief asset.
-- The trial confirms family strengths in physical metaphor, agency, tension, feedback, and state change. It confirms limits in exact numbers, dense causal chains, and conditional logical judgments. No MG or Hand-drawn trial repository or output was inspected.
+| Field | Current truth |
+| --- | --- |
+| Repository | `HWang0310/deeptalk-illustrated-metaphor` |
+| Stable branch | `main` |
+| Runtime behavior baseline | `48848affe018fc2cff8ee15bad7a09bb002776e4` |
+| Stage | Contract V1 runner `ACCEPTED / IMPLEMENTED_UNRELEASED`; semantic-specificity/visual-quality optimization is the next product track |
+| Canonical identity | **Illustrated Metaphor** |
+| Canonical runner | `python3 scripts/contract_runner.py` |
+| Product boundary | Independent illustrated-metaphor plugin; DeepTalk Core is a separate consumer and may repin only after Nexus integration review |
 
-## Visual Asset Plugin Contract V1 Runner
+## Governance
 
-- TASK_ID: DT-ILL-CV1-001
-- Implementation branch: `agent/contract-v1-runner-implementation`
-- Starting readiness SHA: `6f2af7d8da454ac061a8040242c6b4b66fc34d48`
-- Status: IMPLEMENTED_UNRELEASED / AWAITING_NEXUS_REVIEW
-- The Contract V1 runner implements the full Visual Asset Plugin Contract V1 specification:
-  - Deterministic suitability assessment (SUITABLE/BORDERLINE/ABSTAIN) via keyword matching
-  - Deterministic proposal_id and candidate_id computation (SHA-256 based)
-  - Real asset rendering via the existing SVG → sips → ffmpeg pipeline
-  - Actual MP4 duration measurement via ffprobe; Candidate.duration_ms reflects real media
-  - QA re-run on final post-processed artifacts (not pre-postprocess QA)
-  - ABSTAIN generation fails closed (FAILED with SUITABILITY_ABSTAIN, no Candidate)
-  - Canvas quality-first: 1920x1080 via SVG vector re-rasterization; non-16:9 → BLOCKED
-  - MP4 metadata stripped (`-map_metadata -1`) for binary repeatability
-  - Atomic result write (temp + os.replace)
-  - 73+ tests pass (25 existing + 38 unit + 10+ integration), ruff clean
-- Nexus reviewed initial implementation at SHA `06e938ed`; CORRECTION-1 applied for 5 issues:
-  1. Candidate duration reflects actual MP4 (ffprobe measurement)
-  2. Real 1920x1080 CLI integration test (frame/MP4 actual resolution verified)
-  3. QA runs on final post-processed artifacts
-  4. ABSTAIN generation fails closed
-  5. PROJECT_STATE.md updated
-- Not ACCEPTED, not PINNED, not RELEASED. Awaiting Nexus exact-SHA review.
+- `main` represents the latest plugin-local accepted stable runtime plus governance-only updates.
+- New engineering work starts from `main` on an isolated task branch and follows the current `HWang0310/engineering-journal` standards.
+- `AGENTS.md` defines mandatory bootstrap, provenance, and project-specific rules.
+- `docs/DEEPTALK-INTEGRATION.md` is the non-negotiable DeepTalk compatibility gate.
+- Plugin-local acceptance never updates DeepTalk Core automatically. The plugin returns an exact SHA to DeepTalk Nexus for independent integration review.
 
-## Next operational action
+## Research / provenance boundary
 
-Do not enter a next stage from this trial. Any future Product Review may use the evidence to decide whether a separate creator-usability study is warranted; do not promote B1 to a formal brand identity, mascot, or production model-keyframe pipeline.
+- Track A remains an upstream-reference research track with explicit provenance and no project ownership claim over Xiaohei / 小黑.
+- Track B is the independent neutral/original implementation path and remains the primary project-owned R&D direction.
+- The project-owned visual vocabulary and generated media must stay provenance-clean and must not impersonate evidence/REAL_MATERIAL.
+
+## What has been evidenced
+
+- Deterministic local illustrated rendering from approved stills and structured scene states.
+- Repeatable benchmark corpora with machine QA and sequence-hash evidence.
+- A bounded project-owned original metaphor vocabulary and neutral actor/object grammar.
+- Contract V1 suitability/generation behavior at the runtime baseline, including fail-closed ABSTAIN generation handling and real 1920×1080 output validation.
+- DeepTalk Phase 5 synthetic integration with the exact-pinned runner.
+- Limited real-A-roll Phase 6 owner-visible evidence produced creator-viewable candidates and exposed the current quality weakness: different opportunities can collapse into generic metaphor patterns, while mechanism-heavy content may be represented too abstractly to add enough explanatory value.
+
+## Current quality direction
+
+The next optimization track should prioritize:
+
+- stronger semantic specificity;
+- opportunity-specific metaphor/action/composition mapping;
+- broader project-owned object/action vocabulary;
+- less reuse of generic drag/pull/burden motifs;
+- stronger visual anchors for the exact spoken concept;
+- better scene variation and motion differentiation;
+- explicit `ABSTAIN` when metaphor would reduce factual precision;
+- creator-facing before/after benchmarks that evaluate semantic fit as well as aesthetics.
+
+## Known limitations
+
+- Exact numbers and dense causal logic are not natural fits for decorative metaphor and should often abstain.
+- Some mechanism opportunities can produce visually coherent but semantically weak metaphors.
+- Model-generated independent-keyframe consistency remains a separate high-risk research path, not a production requirement.
+- Track A must remain provenance-bounded and must never be treated as project-owned identity.
+
+## Current next gate
+
+Start an independent Illustrated Metaphor optimization Curator session from repository Recovery Issue #1. The plugin project may improve internal rendering and visual language, but completion requires native validation, representative before/after visual evidence, Contract V1 compatibility, provenance correctness, and a handback exact SHA for DeepTalk Nexus integration review.
